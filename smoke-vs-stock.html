@@ -182,26 +182,26 @@
 
 <div class="wordmark"><b>Floresearch</b> · Market Stories</div>
 
-<div class="stage" id="stage" aria-label="Animated chart: smoking a pack of Benson and Hedges a day versus investing Rs 1,000 in Pakistan Tobacco Company stock, 2000 to 2026">
+<div class="stage" id="stage" aria-label="Animated chart: smoking a pack of Benson and Hedges a day versus investing the pack price in Pakistan Tobacco Company stock, 2000 to 2026">
   <div class="chartwrap">
     <div class="made">Made with <b>Floresearch Portal</b></div>
     <h1 class="story-title">Smoking a pack of Benson &amp; Hedges a day vs buying PTC stock instead</h1>
     <div class="story-sub">Pakistan Tobacco Company (PSX: PAKT)</div>
     <div class="story-range">Jan 2000 – <span id="curdate">Jan 2000</span></div>
     <canvas id="cv"></canvas>
-    <div class="caption" id="caption">One smokes a pack of Benson &amp; Hedges a day; the other puts Rs 1,000 into Pakistan Tobacco, the company behind it.</div>
+    <div class="caption" id="caption">One buys a Benson &amp; Hedges pack a day; the other invests the same amount in PAKT, the company behind it.</div>
     <div class="pillrow">
-      <div class="pill">🚬 B&amp;H pack <span class="px" id="price">Rs 25</span></div>
+      <div class="pill">B&amp;H pack <span class="px" id="price">Rs 25</span></div>
     </div>
   </div>
   <div class="endcard">
     <div class="end-head">One smoked it. One owned it.</div>
     <div class="end-sub">26 years later</div>
     <div class="lb">
-      <div class="lb-row"><span class="lb-rank">1</span><span class="lb-dot up"></span><span class="lb-name">Investor: Rs 1,000 → 128 shares</span><span class="lb-val">Rs 190K</span></div>
+      <div class="lb-row"><span class="lb-rank">1</span><span class="lb-dot up"></span><span class="lb-name">Investor: 16,443 shares</span><span class="lb-val">Rs 24.5M</span></div>
       <div class="lb-row"><span class="lb-rank">2</span><span class="lb-dot down"></span><span class="lb-name">Smoker: 9,790 packs</span><span class="lb-val">Rs -1.67M</span></div>
     </div>
-    <button class="replay" id="replay">↺ Replay</button>
+    <button class="replay" id="replay">Replay</button>
   </div>
 </div>
 
@@ -210,7 +210,7 @@
   <input type="range" id="scrub" min="0" max="1000" value="0" step="1" aria-label="Scrub through the timeline">
 </div>
 
-<p class="foot">Pakistan Tobacco Company (PSX: PAKT) total return with dividends reinvested on Rs 1,000 invested in Jan 2000, vs the cumulative cost of a Benson &amp; Hedges pack a day, Jan 2000 – Oct 2026. Monthly series reconstructed from public price history; figures approximate. Vertical axis is log-scaled in both directions.</p>
+<p class="foot">One buys a Benson &amp; Hedges pack a day; the other puts the same money into Pakistan Tobacco Company (PSX: PAKT) stock with dividends reinvested, Jan 2000 – Oct 2026. Monthly series reconstructed from public price history; figures approximate.</p>
 
 <script>
 (function(){
@@ -220,7 +220,7 @@
   function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
   var N=322; // months, Jan 2000 (0) .. Oct 2026 (321)
 
-  // Rs 1,000 invested in PAKT, dividends reinvested — anchors [monthIndex, Rs], log-space between
+  // PAKT total-return index (dividends reinvested), Rs 1,000 base — anchors [monthIndex, level], log-space between
   var A=[[0,1000],[6,820],[11,620],[23,500],[29,700],[35,1050],[47,1500],[59,1900],[71,2300],
          [90,3800],[104,3300],[108,2600],[120,3400],[132,4800],[144,7000],[156,11500],
          [168,19000],[180,32000],[198,52000],[209,78000],[215,70000],[227,73000],[242,52000],
@@ -239,28 +239,31 @@
 
   var rng=mulberry32(7);
   var inv=[], packPrice=[], smo=[];
-  var n=0, cum=0, PACKS_PER_MONTH=9790/N;
+  var n=0, cum=0, units=0, PACKS_PER_MONTH=9790/N;
   for(var i=0;i<N;i++){
     n=n*0.80+(rng()-0.5)*0.055;
-    inv.push(interp(A,i,true)*Math.exp(n));
+    var index=interp(A,i,true)*Math.exp(n);   // PAKT total-return index level
     var pr=interp(P,i,false);
     packPrice.push(pr);
-    cum-=pr*PACKS_PER_MONTH;
+    var spend=pr*PACKS_PER_MONTH;
+    cum-=spend;
+    units+=spend/index;                       // each month the pack money buys PAKT instead
+    inv.push(units*index);
     smo.push(cum);
   }
   // calibrate endpoints to the story's exact totals
-  var fI=190000/inv[N-1]; for(i=0;i<N;i++) inv[i]*=fI;
+  var fI=24500000/inv[N-1]; for(i=0;i<N;i++) inv[i]*=fI;
   var fS=-1670000/smo[N-1]; for(i=0;i<N;i++) smo[i]*=fS;
 
   var CAPS=[
-    [0,  "One smokes a pack of Benson & Hedges a day; the other puts Rs 1,000 into Pakistan Tobacco, the company behind it.", false],
+    [0,  "One buys a Benson & Hedges pack a day; the other invests the same amount in PAKT, the company behind it.", false],
     [20, "Five loss-making years force a restructuring at PTC; the stock bottoms.", true],
     [42, "PTC begins making Benson & Hedges locally in Pakistan.", true],
     [104,"KSE crash: the market floor freezes trading for 110 days.", true],
     [204,"PSX is Asia's best-performing market; PAKT trades in four figures.", true],
     [278,"FED on premium packs jumps ~150%; a pack of B&H nears Rs 500.", true],
     [305,"KSE-100 boom carries PAKT to record highs.", true],
-    [316,"26 years: Rs 1.67M burned on packs; Rs 1,000 grew to Rs 190K.", false]
+    [316,"26 years: Rs 1.67M went up in smoke; the same money in PAKT grew to Rs 24.5M.", false]
   ];
 
   /* ---------- helpers ---------- */
@@ -387,7 +390,7 @@
     var maxV=1000, minV=-1000;
     for(var k=0;k<=m;k++){ if(inv[k]>maxV)maxV=inv[k]; if(smo[k]<minV)minV=smo[k]; }
     if(iv>maxV)maxV=iv; if(sv<minV)minV=sv;
-    var tMax=maxV*1.35, tMin=minV*1.25;
+    var tMax=maxV*1.12, tMin=minV*1.22;
     var ease=1-Math.exp(-dt*5);
     if(reduced||!playing){dispMax=tMax;dispMin=tMin;}
     else{dispMax+=(tMax-dispMax)*ease; dispMin+=(tMin-dispMin)*ease;}
@@ -398,30 +401,23 @@
     var padL=10, padR=Math.max(96,W*0.30), padT=10, padB=24;
     var axL=padL+48;
     var pw=W-axL-padR, ph=H-padT-padB;
-    var LIN=400; // symmetric log: ~linear below Rs 400, log-compressed beyond
-    function T(v){return (v<0?-1:1)*Math.log10(1+Math.abs(v)/LIN);}
-    var tTop=T(dispMax), tBot=T(dispMin);
-    function Y(v){return padT+(tTop-T(v))/(tTop-tBot)*ph;}
+    function Y(v){return padT+(dispMax-v)/(dispMax-dispMin)*ph;}
     function X(mi){return axL+(mF<=0?0:mi/mF)*pw;}
 
-    /* gridlines — decade steps on the symmetric log scale */
+    /* gridlines */
+    var step=niceStep((dispMax-dispMin)/4.2);
     ctx.font="600 10.5px Inter, sans-serif";
     ctx.textBaseline="middle";
-    var gvals=[0];
-    for(var e=3;e<=7;e++){
-      var d=Math.pow(10,e);
-      if(d<=dispMax)gvals.push(d);
-      if(-d>=dispMin)gvals.push(-d);
-    }
-    for(var gi=0; gi<gvals.length; gi++){
-      var gv=gvals[gi], gy=Y(gv);
+    var g0=Math.ceil(dispMin/step)*step;
+    for(var gv=g0; gv<=dispMax; gv+=step){
+      var gy=Y(gv);
       if(gy<padT-1||gy>padT+ph+1)continue;
-      ctx.strokeStyle=gv===0?TOK.zero:TOK.grid;
+      ctx.strokeStyle=Math.abs(gv)<step*0.01?TOK.zero:TOK.grid;
       ctx.lineWidth=1;
       ctx.beginPath(); ctx.moveTo(axL,gy); ctx.lineTo(axL+pw,gy); ctx.stroke();
       ctx.fillStyle=TOK.faint;
       ctx.textAlign="right";
-      ctx.fillText(fmtAxis(gv), axL-7, gy);
+      ctx.fillText(fmtAxis(Math.abs(gv)<step*0.01?0:gv), axL-7, gy);
     }
 
     /* x year ticks */
@@ -472,11 +468,11 @@
     var lx=axL+pw+10;
     ctx.textAlign="left"; ctx.textBaseline="middle";
     ctx.font="700 13px Inter, sans-serif";
-    ctx.fillStyle=TOK.up;   ctx.fillText("Investor 📈", lx, lyI-9);
+    ctx.fillStyle=TOK.up;   ctx.fillText("Investor", lx, lyI-9);
     ctx.font="500 12.5px Inter, sans-serif";
     ctx.fillStyle=TOK.ink;  ctx.fillText(fmtMoney(iv), lx, lyI+9);
     ctx.font="700 13px Inter, sans-serif";
-    ctx.fillStyle=TOK.down; ctx.fillText("Smoker 🚬", lx, lyS-9);
+    ctx.fillStyle=TOK.down; ctx.fillText("Smoker", lx, lyS-9);
     ctx.font="500 12.5px Inter, sans-serif";
     ctx.fillStyle=TOK.ink;  ctx.fillText(fmtMoney(sv), lx, lyS+9);
   }
