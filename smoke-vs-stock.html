@@ -41,11 +41,10 @@
       radial-gradient(36% 30% at 8% 78%, rgba(176,32,31,.08), transparent 70%),
       #FFFFFF;
   }
-  .wordmark{
-    font-family:'Poppins',sans-serif; font-weight:600; font-size:13px;
-    letter-spacing:.14em; text-transform:uppercase; color:var(--muted);
+  .watermark{
+    position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+    width:50%; opacity:.06; pointer-events:none;
   }
-  .wordmark b{color:var(--up); font-weight:700;}
   .stage{
     position:relative;
     width:min(420px, 100%, 46vh);
@@ -68,7 +67,7 @@
   }
   .stage.done .chartwrap{opacity:.10;}
   /* Reel view: a clean full-height 9:16 frame (1080x1920 proportions) for screen recording */
-  body.reel .wordmark, body.reel .controls, body.reel .foot{display:none;}
+  body.reel .controls, body.reel .foot{display:none;}
   body.reel{padding:0; gap:0; justify-content:center; min-height:100vh;}
   body.reel .stage{width:min(100vw, 56.25vh); border-radius:0; border:none;}
   .reel-exit{position:fixed; top:14px; left:14px; z-index:20; opacity:.85;}
@@ -180,9 +179,8 @@
 <body style="margin:0">
 <div class="bgfx" aria-hidden="true"></div>
 
-<div class="wordmark"><b>Floresearch</b> · Market Stories</div>
-
 <div class="stage" id="stage" aria-label="Animated chart: smoking a pack of Benson and Hedges a day versus investing the pack price in Pakistan Tobacco Company stock, 2000 to 2026">
+  <img class="watermark" src="flostocks-icon.png" alt="">
   <div class="chartwrap">
     <h1 class="story-title">Smoking a pack of Benson &amp; Hedges a day vs buying PTC stock instead</h1>
     <div class="story-sub">Pakistan Tobacco Company (PSX: PAKT)</div>
@@ -207,7 +205,7 @@
 <div class="controls">
   <button class="ctl" id="playBtn">Pause</button>
   <input type="range" id="scrub" min="0" max="1000" value="0" step="1" aria-label="Scrub through the timeline">
-  <button class="ctl" id="soundBtn">Sound off</button>
+  <button class="ctl" id="soundBtn">Sound: off</button>
   <button class="ctl" id="reelBtn">Reel</button>
 </div>
 <button class="ctl reel-exit" id="reelExit" hidden>Exit reel</button>
@@ -486,77 +484,116 @@
   }
   requestAnimationFrame(frame);
 
-  /* ---------- background music: a soft synth loop, generated with WebAudio ---------- */
-  var AC=null, master=null, musicOn=false, barIdx=0, nextT=0, musTimer=null, noiseBuf=null;
+  /* ---------- background music: synthesized beat loops (WebAudio, no files) ---------- */
+  var AC=null, master=null, styleIdx=0, barIdx=0, nextT=0, musTimer=null, noiseBuf=null;
+  var LABELS=["Sound: off","Beat: pulse","Beat: drive","Beat: chill"];
   var soundBtn=document.getElementById("soundBtn");
   var CH=[[146.83,220.00,293.66,349.23],   // Dm
           [116.54,174.61,220.00,293.66],   // Bb maj7
           [174.61,220.00,261.63,329.63],   // F maj7
           [130.81,196.00,246.94,293.66]];  // C add9
   var BASS=[73.42,58.27,87.31,65.41];
-  var BEAT=60/84, BAR=BEAT*4;
+  function beatLen(){ return styleIdx===1?60/118: styleIdx===2?60/140: 60/84; }
+  function barLen(){ return beatLen()*4; }
   function ensureAudio(){
     if(!AC){
       var Ctx=window.AudioContext||window.webkitAudioContext;
       if(!Ctx)return false;
       AC=new Ctx();
       master=AC.createGain(); master.gain.value=0;
-      var lp=AC.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=5200;
+      var lp=AC.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=5600;
       master.connect(lp); lp.connect(AC.destination);
     }
     if(AC.state==="suspended")AC.resume();
     return true;
   }
-  function noteAt(t,freq,dur,vol,type){
+  function noteAt(t,freq,dur,vol,type,cut){
     var o=AC.createOscillator(), g=AC.createGain(), f=AC.createBiquadFilter();
     o.type=type; o.frequency.value=freq;
-    f.type="lowpass"; f.frequency.value=950;
+    f.type="lowpass"; f.frequency.value=cut||950;
+    var atk=Math.min(1.1,dur*0.35);
     g.gain.setValueAtTime(0,t);
-    g.gain.linearRampToValueAtTime(vol,t+Math.min(1.1,dur*0.35));
-    g.gain.setValueAtTime(vol,t+dur-0.6);
+    g.gain.linearRampToValueAtTime(vol,t+atk);
+    if(dur>1.2)g.gain.setValueAtTime(vol,t+dur-0.6);
     g.gain.linearRampToValueAtTime(0,t+dur);
     o.connect(f); f.connect(g); g.connect(master);
     o.start(t); o.stop(t+dur+0.05);
   }
-  function kickAt(t){
+  function kickAt(t,vol){
     var o=AC.createOscillator(), g=AC.createGain();
     o.type="sine";
     o.frequency.setValueAtTime(95,t);
     o.frequency.exponentialRampToValueAtTime(42,t+0.12);
-    g.gain.setValueAtTime(0.09,t);
+    g.gain.setValueAtTime(vol,t);
     g.gain.exponentialRampToValueAtTime(0.001,t+0.22);
     o.connect(g); g.connect(master);
     o.start(t); o.stop(t+0.25);
   }
-  function hatAt(t){
+  function bass808(t,freq,dur,vol){
+    var o=AC.createOscillator(), g=AC.createGain();
+    o.type="sine";
+    o.frequency.setValueAtTime(freq*1.6,t);
+    o.frequency.exponentialRampToValueAtTime(freq,t+0.09);
+    g.gain.setValueAtTime(0,t);
+    g.gain.linearRampToValueAtTime(vol,t+0.02);
+    g.gain.setValueAtTime(vol,t+dur*0.6);
+    g.gain.linearRampToValueAtTime(0,t+dur);
+    o.connect(g); g.connect(master);
+    o.start(t); o.stop(t+dur+0.05);
+  }
+  function burst(t,vol,freq,type,dec){
     if(!noiseBuf){
-      noiseBuf=AC.createBuffer(1,Math.floor(AC.sampleRate*0.06),AC.sampleRate);
+      noiseBuf=AC.createBuffer(1,Math.floor(AC.sampleRate*0.22),AC.sampleRate);
       var d=noiseBuf.getChannelData(0);
       for(var z=0;z<d.length;z++)d[z]=Math.random()*2-1;
     }
-    var s=AC.createBufferSource(), g=AC.createGain(), h=AC.createBiquadFilter();
+    var s=AC.createBufferSource(), g=AC.createGain(), f=AC.createBiquadFilter();
     s.buffer=noiseBuf;
-    h.type="highpass"; h.frequency.value=6500;
-    g.gain.setValueAtTime(0.018,t);
-    g.gain.exponentialRampToValueAtTime(0.001,t+0.05);
-    s.connect(h); h.connect(g); g.connect(master);
-    s.start(t);
+    f.type=type; f.frequency.value=freq; if(type==="bandpass")f.Q.value=1.2;
+    g.gain.setValueAtTime(vol,t);
+    g.gain.exponentialRampToValueAtTime(0.001,t+dec);
+    s.connect(f); f.connect(g); g.connect(master);
+    s.start(t); s.stop(t+dec+0.02);
   }
+  function hatAt(t,vol){ burst(t,vol,7000,"highpass",0.045); }
+  function clapAt(t,vol){ burst(t,vol,1800,"bandpass",0.16); }
   function scheduleBar(t,bi){
-    var c=Math.floor(bi/2)%4;
-    if(bi%2===0){
-      for(var q=0;q<CH[c].length;q++) noteAt(t,CH[c][q],BAR*2,0.035,"triangle");
-      noteAt(t,BASS[c],BAR*2,0.06,"sine");
+    var B=beatLen(), b, q;
+    if(styleIdx===1){                              // pulse: four-on-the-floor
+      var c=Math.floor(bi/2)%4;
+      for(b=0;b<4;b++){ kickAt(t+b*B,0.11); hatAt(t+(b+0.5)*B,0.028); }
+      clapAt(t+B,0.05); clapAt(t+3*B,0.05);
+      for(b=0;b<8;b++) bass808(t+b*B/2,BASS[c],B*0.42,0.05);
+      if(bi%2===0){
+        for(q=0;q<CH[c].length;q++){
+          noteAt(t,CH[c][q],0.45,0.028,"sawtooth",1300);
+          noteAt(t+2.5*B,CH[c][q],0.4,0.024,"sawtooth",1300);
+        }
+      }
+    }else if(styleIdx===2){                        // drive: half-time, rolling hats
+      var c2=[0,0,1,3][Math.floor(bi/2)%4];
+      kickAt(t,0.12); kickAt(t+1.5*B,0.10); kickAt(t+2.75*B,0.11);
+      clapAt(t+2*B,0.06);
+      for(var s=0;s<16;s++) hatAt(t+s*B/4,s%4===0?0.02:0.011);
+      if(bi%4===3){ for(var r=0;r<8;r++) hatAt(t+3*B+r*B/8,0.014); }
+      bass808(t,BASS[c2],barLen()*0.9,0.085);
+      if(bi%2===0) for(q=0;q<CH[c2].length;q++) noteAt(t,CH[c2][q],barLen()*2,0.016,"triangle",700);
+    }else{                                         // chill: soft pads
+      var c3=Math.floor(bi/2)%4;
+      if(bi%2===0){
+        for(q=0;q<CH[c3].length;q++) noteAt(t,CH[c3][q],barLen()*2,0.035,"triangle",950);
+        noteAt(t,BASS[c3],barLen()*2,0.06,"sine",950);
+      }
+      kickAt(t,0.09); kickAt(t+2*B,0.09);
+      for(b=0;b<4;b++) hatAt(t+(b+0.5)*B,0.018);
     }
-    kickAt(t); kickAt(t+2*BEAT);
-    for(var b=0;b<4;b++) hatAt(t+(b+0.5)*BEAT);
   }
   function musicTick(){
-    if(!AC||!musicOn)return;
+    if(!AC||styleIdx===0)return;
     while(nextT<AC.currentTime+1.2){
       if(nextT<AC.currentTime)nextT=AC.currentTime+0.1;
       scheduleBar(nextT,barIdx++);
-      nextT+=BAR;
+      nextT+=barLen();
     }
   }
   function setLevel(v){
@@ -565,15 +602,18 @@
     master.gain.setTargetAtTime(v,AC.currentTime,0.5);
   }
   function updateMusic(){
-    if(!musicOn){ setLevel(0); return; }
+    if(styleIdx===0){ setLevel(0); return; }
     if(!ensureAudio())return;
-    if(!musTimer){ nextT=AC.currentTime+0.1; musTimer=setInterval(musicTick,250); }
+    if(!musTimer)musTimer=setInterval(musicTick,250);
+    if(nextT<AC.currentTime)nextT=AC.currentTime+0.1;
     setLevel(playing&&!done?0.5:0);
   }
   soundBtn.addEventListener("click",function(e){
     e.stopPropagation();
-    musicOn=!musicOn;
-    soundBtn.textContent=musicOn?"Sound on":"Sound off";
+    styleIdx=(styleIdx+1)%4;
+    soundBtn.textContent=LABELS[styleIdx];
+    barIdx=0;
+    if(AC)nextT=AC.currentTime+0.1;
     updateMusic();
   });
 
