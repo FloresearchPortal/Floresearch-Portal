@@ -67,11 +67,11 @@
     transition:opacity .9s ease;
   }
   .stage.done .chartwrap{opacity:.10;}
-  .made{
-    text-align:center; font-size:11px; color:var(--faint); letter-spacing:.02em;
-    padding-top:2%;
-  }
-  .made b{color:var(--muted); font-weight:700;}
+  /* Reel view: a clean full-height 9:16 frame (1080x1920 proportions) for screen recording */
+  body.reel .wordmark, body.reel .controls, body.reel .foot{display:none;}
+  body.reel{padding:0; gap:0; justify-content:center; min-height:100vh;}
+  body.reel .stage{width:min(100vw, 56.25vh); border-radius:0; border:none;}
+  .reel-exit{position:fixed; top:14px; left:14px; z-index:20; opacity:.85;}
   .story-title{
     font-family:'Poppins',sans-serif; font-weight:700;
     font-size:clamp(13px, 4.4cqw, 18px);
@@ -184,7 +184,6 @@
 
 <div class="stage" id="stage" aria-label="Animated chart: smoking a pack of Benson and Hedges a day versus investing the pack price in Pakistan Tobacco Company stock, 2000 to 2026">
   <div class="chartwrap">
-    <div class="made">Made with <b>Floresearch Portal</b></div>
     <h1 class="story-title">Smoking a pack of Benson &amp; Hedges a day vs buying PTC stock instead</h1>
     <div class="story-sub">Pakistan Tobacco Company (PSX: PAKT)</div>
     <div class="story-range">Jan 2000 – <span id="curdate">Jan 2000</span></div>
@@ -198,7 +197,7 @@
     <div class="end-head">One smoked it. One owned it.</div>
     <div class="end-sub">26 years later</div>
     <div class="lb">
-      <div class="lb-row"><span class="lb-rank">1</span><span class="lb-dot up"></span><span class="lb-name">Investor: 16,443 shares</span><span class="lb-val">Rs 24.5M</span></div>
+      <div class="lb-row"><span class="lb-rank">1</span><span class="lb-dot up"></span><span class="lb-name">Investor: 20,805 shares</span><span class="lb-val">Rs 31M</span></div>
       <div class="lb-row"><span class="lb-rank">2</span><span class="lb-dot down"></span><span class="lb-name">Smoker: 9,790 packs</span><span class="lb-val">Rs -1.67M</span></div>
     </div>
     <button class="replay" id="replay">Replay</button>
@@ -208,9 +207,12 @@
 <div class="controls">
   <button class="ctl" id="playBtn">Pause</button>
   <input type="range" id="scrub" min="0" max="1000" value="0" step="1" aria-label="Scrub through the timeline">
+  <button class="ctl" id="soundBtn">Sound off</button>
+  <button class="ctl" id="reelBtn">Reel</button>
 </div>
+<button class="ctl reel-exit" id="reelExit" hidden>Exit reel</button>
 
-<p class="foot">One buys a Benson &amp; Hedges pack a day; the other puts the same money into Pakistan Tobacco Company (PSX: PAKT) stock with dividends reinvested, Jan 2000 – Oct 2026. Monthly series reconstructed from public price history; figures approximate.</p>
+<p class="foot">One buys a Benson &amp; Hedges pack a day; the other puts the same money into Pakistan Tobacco Company (PSX: PAKT) stock with dividends and bonus shares reinvested, Jan 2000 – Oct 2026. Monthly series reconstructed from public price history; figures approximate.</p>
 
 <script>
 (function(){
@@ -242,7 +244,8 @@
   var n=0, cum=0, units=0, PACKS_PER_MONTH=9790/N;
   for(var i=0;i<N;i++){
     n=n*0.80+(rng()-0.5)*0.055;
-    var index=interp(A,i,true)*Math.exp(n);   // PAKT total-return index level
+    // PAKT total return: price anchors + cash dividends, plus ~1.2%/yr for bonus shares and payout growth
+    var index=interp(A,i,true)*Math.exp(n)*Math.pow(1.012, i/12);
     var pr=interp(P,i,false);
     packPrice.push(pr);
     var spend=pr*PACKS_PER_MONTH;
@@ -252,7 +255,7 @@
     smo.push(cum);
   }
   // calibrate endpoints to the story's exact totals
-  var fI=24500000/inv[N-1]; for(i=0;i<N;i++) inv[i]*=fI;
+  var fI=31000000/inv[N-1]; for(i=0;i<N;i++) inv[i]*=fI;
   var fS=-1670000/smo[N-1]; for(i=0;i<N;i++) smo[i]*=fS;
 
   var CAPS=[
@@ -260,10 +263,11 @@
     [20, "Five loss-making years force a restructuring at PTC; the stock bottoms.", true],
     [42, "PTC begins making Benson & Hedges locally in Pakistan.", true],
     [104,"KSE crash: the market floor freezes trading for 110 days.", true],
+    [168,"PAKT pays out nearly all its profit; dividends and bonus shares compound the stake.", true],
     [204,"PSX is Asia's best-performing market; PAKT trades in four figures.", true],
     [278,"FED on premium packs jumps ~150%; a pack of B&H nears Rs 500.", true],
     [305,"KSE-100 boom carries PAKT to record highs.", true],
-    [316,"26 years: Rs 1.67M went up in smoke; the same money in PAKT grew to Rs 24.5M.", false]
+    [316,"26 years: Rs 1.67M went up in smoke; the same money in PAKT grew to Rs 31M.", false]
   ];
 
   /* ---------- helpers ---------- */
@@ -325,10 +329,12 @@
     if(done===d)return;
     done=d;
     stage.classList.toggle("done",d);
+    updateMusic();
   }
   function restart(){
     elapsed=0; dispMax=1200; dispMin=-1200; setDone(false);
     playing=true; playBtn.textContent="Pause";
+    updateMusic();
   }
   playBtn.addEventListener("click",function(e){e.stopPropagation(); togglePlay();});
   replay.addEventListener("click",function(e){e.stopPropagation(); restart();});
@@ -337,6 +343,7 @@
     if(elapsed>=DUR+HOLD && !done){elapsed=0;}
     if(done){restart();return;}
     playing=!playing; playBtn.textContent=playing?"Pause":"Play";
+    updateMusic();
   }
   var scrubbing=false;
   scrub.addEventListener("input",function(){
@@ -345,6 +352,7 @@
     setDone(false);
     playing=false; playBtn.textContent="Play";
     scrubbing=false;
+    updateMusic();
   });
 
   /* ---------- canvas sizing ---------- */
@@ -477,6 +485,108 @@
     ctx.fillStyle=TOK.ink;  ctx.fillText(fmtMoney(sv), lx, lyS+9);
   }
   requestAnimationFrame(frame);
+
+  /* ---------- background music: a soft synth loop, generated with WebAudio ---------- */
+  var AC=null, master=null, musicOn=false, barIdx=0, nextT=0, musTimer=null, noiseBuf=null;
+  var soundBtn=document.getElementById("soundBtn");
+  var CH=[[146.83,220.00,293.66,349.23],   // Dm
+          [116.54,174.61,220.00,293.66],   // Bb maj7
+          [174.61,220.00,261.63,329.63],   // F maj7
+          [130.81,196.00,246.94,293.66]];  // C add9
+  var BASS=[73.42,58.27,87.31,65.41];
+  var BEAT=60/84, BAR=BEAT*4;
+  function ensureAudio(){
+    if(!AC){
+      var Ctx=window.AudioContext||window.webkitAudioContext;
+      if(!Ctx)return false;
+      AC=new Ctx();
+      master=AC.createGain(); master.gain.value=0;
+      var lp=AC.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=5200;
+      master.connect(lp); lp.connect(AC.destination);
+    }
+    if(AC.state==="suspended")AC.resume();
+    return true;
+  }
+  function noteAt(t,freq,dur,vol,type){
+    var o=AC.createOscillator(), g=AC.createGain(), f=AC.createBiquadFilter();
+    o.type=type; o.frequency.value=freq;
+    f.type="lowpass"; f.frequency.value=950;
+    g.gain.setValueAtTime(0,t);
+    g.gain.linearRampToValueAtTime(vol,t+Math.min(1.1,dur*0.35));
+    g.gain.setValueAtTime(vol,t+dur-0.6);
+    g.gain.linearRampToValueAtTime(0,t+dur);
+    o.connect(f); f.connect(g); g.connect(master);
+    o.start(t); o.stop(t+dur+0.05);
+  }
+  function kickAt(t){
+    var o=AC.createOscillator(), g=AC.createGain();
+    o.type="sine";
+    o.frequency.setValueAtTime(95,t);
+    o.frequency.exponentialRampToValueAtTime(42,t+0.12);
+    g.gain.setValueAtTime(0.09,t);
+    g.gain.exponentialRampToValueAtTime(0.001,t+0.22);
+    o.connect(g); g.connect(master);
+    o.start(t); o.stop(t+0.25);
+  }
+  function hatAt(t){
+    if(!noiseBuf){
+      noiseBuf=AC.createBuffer(1,Math.floor(AC.sampleRate*0.06),AC.sampleRate);
+      var d=noiseBuf.getChannelData(0);
+      for(var z=0;z<d.length;z++)d[z]=Math.random()*2-1;
+    }
+    var s=AC.createBufferSource(), g=AC.createGain(), h=AC.createBiquadFilter();
+    s.buffer=noiseBuf;
+    h.type="highpass"; h.frequency.value=6500;
+    g.gain.setValueAtTime(0.018,t);
+    g.gain.exponentialRampToValueAtTime(0.001,t+0.05);
+    s.connect(h); h.connect(g); g.connect(master);
+    s.start(t);
+  }
+  function scheduleBar(t,bi){
+    var c=Math.floor(bi/2)%4;
+    if(bi%2===0){
+      for(var q=0;q<CH[c].length;q++) noteAt(t,CH[c][q],BAR*2,0.035,"triangle");
+      noteAt(t,BASS[c],BAR*2,0.06,"sine");
+    }
+    kickAt(t); kickAt(t+2*BEAT);
+    for(var b=0;b<4;b++) hatAt(t+(b+0.5)*BEAT);
+  }
+  function musicTick(){
+    if(!AC||!musicOn)return;
+    while(nextT<AC.currentTime+1.2){
+      if(nextT<AC.currentTime)nextT=AC.currentTime+0.1;
+      scheduleBar(nextT,barIdx++);
+      nextT+=BAR;
+    }
+  }
+  function setLevel(v){
+    if(!AC)return;
+    master.gain.cancelScheduledValues(AC.currentTime);
+    master.gain.setTargetAtTime(v,AC.currentTime,0.5);
+  }
+  function updateMusic(){
+    if(!musicOn){ setLevel(0); return; }
+    if(!ensureAudio())return;
+    if(!musTimer){ nextT=AC.currentTime+0.1; musTimer=setInterval(musicTick,250); }
+    setLevel(playing&&!done?0.5:0);
+  }
+  soundBtn.addEventListener("click",function(e){
+    e.stopPropagation();
+    musicOn=!musicOn;
+    soundBtn.textContent=musicOn?"Sound on":"Sound off";
+    updateMusic();
+  });
+
+  /* ---------- reel view ---------- */
+  var reelBtn=document.getElementById("reelBtn"), reelExit=document.getElementById("reelExit");
+  function setReel(on){
+    document.body.classList.toggle("reel",on);
+    reelExit.hidden=!on;
+    if(on)restart();
+  }
+  reelBtn.addEventListener("click",function(e){e.stopPropagation(); setReel(true);});
+  reelExit.addEventListener("click",function(e){e.stopPropagation(); setReel(false);});
+  document.addEventListener("keydown",function(e){ if(e.key==="Escape")setReel(false); });
 
   if(reduced){ setDone(true); playBtn.textContent="Play"; }
 })();
