@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pack a Day vs the Stock</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+  /* Layout: one vertical "story stage" card (9:16, like the source video) centered on the portal's cream ground, controls beneath. */
+  :root{
+    --bg:#FAFAF8;
+    --surface:#FFFFFF;
+    --ink:#17181A;
+    --muted:#6E7176;
+    --faint:#A0A2A5;
+    --up:#1E6B3D;
+    --down:#B0201F;
+    --pill-bg:#E6F1E9;
+    --pill-ink:#1E6B3D;
+    --border:#E3E1DA;
+    --grid:rgba(23,24,26,.10);
+    --zero:rgba(23,24,26,.30);
+    --shadow:0 12px 32px rgba(20,20,15,.10);
+    --scrim:rgba(250,250,248,.82);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#101211; --surface:#17181A; --ink:#F2F3EF; --muted:#9AA09A; --faint:#71786F;
+      --up:#45A66C; --down:#C45348; --pill-bg:#1C2B21; --pill-ink:#7BC89A;
+      --border:#2A2D2B; --grid:rgba(242,243,239,.10); --zero:rgba(242,243,239,.32);
+      --shadow:0 12px 32px rgba(0,0,0,.45); --scrim:rgba(23,24,26,.84);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#101211; --surface:#17181A; --ink:#F2F3EF; --muted:#9AA09A; --faint:#71786F;
+    --up:#45A66C; --down:#C45348; --pill-bg:#1C2B21; --pill-ink:#7BC89A;
+    --border:#2A2D2B; --grid:rgba(242,243,239,.10); --zero:rgba(242,243,239,.32);
+    --shadow:0 12px 32px rgba(0,0,0,.45); --scrim:rgba(23,24,26,.84);
+    color-scheme: dark;
+  }
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    padding-left:max(16px, env(safe-area-inset-left, 0px));
+    padding-right:max(16px, env(safe-area-inset-right, 0px));
+    padding-block:22px;
+    display:flex; flex-direction:column; align-items:center; gap:14px;
+    min-height:100%;
+  }
+  .wordmark{
+    font-family:'Poppins',sans-serif; font-weight:600; font-size:13px;
+    letter-spacing:.14em; text-transform:uppercase; color:var(--muted);
+  }
+  .wordmark b{color:var(--up); font-weight:700;}
+  .stage{
+    position:relative;
+    width:min(420px, 100%, 46vh);
+    aspect-ratio:9/16;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:18px;
+    box-shadow:var(--shadow);
+    overflow:hidden;
+    cursor:pointer;
+  }
+  .chartwrap{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column;
+    padding:4.2% 5% 4.5% 5%;
+    transition:opacity .9s ease;
+  }
+  .stage.done .chartwrap{opacity:.12;}
+  .made{
+    text-align:center; font-size:11px; color:var(--faint); letter-spacing:.02em;
+    padding-top:2%;
+  }
+  .made b{color:var(--muted); font-weight:700;}
+  .story-title{
+    font-family:'Poppins',sans-serif; font-weight:700;
+    font-size:clamp(14px, 4.6cqw, 19px);
+    line-height:1.3; text-align:center; letter-spacing:.04em;
+    text-transform:uppercase; text-wrap:balance;
+    margin:5.5% 0 0 0;
+  }
+  .story-sub{
+    font-family:'Poppins',sans-serif; font-weight:600;
+    font-size:clamp(12px, 3.6cqw, 15px);
+    text-align:center; color:var(--ink); margin-top:2.5%;
+  }
+  .story-range{
+    font-weight:600; font-size:clamp(11px, 3.4cqw, 14px);
+    text-align:center; color:var(--muted); margin-top:2%;
+    font-variant-numeric:tabular-nums;
+  }
+  .stage{container-type:inline-size;}
+  canvas{display:block; width:100%; flex:1 1 auto; min-height:0;}
+  .caption{
+    min-height:2.8em;
+    font-size:clamp(10.5px, 3.2cqw, 13px); line-height:1.45;
+    text-align:center; color:var(--ink);
+    display:flex; align-items:flex-start; justify-content:center;
+    transition:opacity .45s ease;
+    padding:0 2%;
+  }
+  .pillrow{display:flex; justify-content:center; padding:2.5% 0 1% 0;}
+  .pill{
+    display:inline-flex; align-items:center; gap:7px;
+    background:var(--pill-bg); border:1px solid var(--border);
+    border-radius:999px; padding:7px 16px;
+    font-weight:600; font-size:clamp(11px, 3.4cqw, 14px);
+  }
+  .pill .px{color:var(--pill-ink); font-weight:700; font-variant-numeric:tabular-nums;}
+  .endcard{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; justify-content:center; align-items:center;
+    gap:4.5%; padding:8%;
+    background:var(--scrim);
+    opacity:0; pointer-events:none;
+    transition:opacity .9s ease;
+    text-align:center;
+  }
+  .stage.done .endcard{opacity:1; pointer-events:auto;}
+  .end-head{
+    font-family:'Poppins',sans-serif; font-weight:800; letter-spacing:.06em;
+    font-size:clamp(16px, 5.4cqw, 23px); text-transform:uppercase; text-wrap:balance;
+  }
+  .end-sub{
+    font-family:'Poppins',sans-serif; font-weight:600;
+    font-size:clamp(14px, 4.6cqw, 20px); color:var(--ink);
+  }
+  .lb{display:flex; flex-direction:column; gap:14px; width:100%; max-width:320px;}
+  .lb-row{
+    display:flex; align-items:center; gap:10px;
+    font-size:clamp(12px, 3.9cqw, 16px); font-weight:500;
+    font-variant-numeric:tabular-nums;
+  }
+  .lb-rank{color:var(--muted); font-weight:600; width:1em;}
+  .lb-dot{width:9px; height:9px; border-radius:50%; flex-shrink:0;}
+  .lb-dot.up{background:var(--up);} .lb-dot.down{background:var(--down);}
+  .lb-name{flex:1 1 auto; text-align:left; min-width:0;}
+  .lb-val{font-weight:700;}
+  .replay{
+    font-family:'Inter',sans-serif; font-weight:600; font-size:13px;
+    color:var(--pill-ink); background:var(--pill-bg);
+    border:1px solid var(--border); border-radius:8px;
+    padding:9px 22px; cursor:pointer; margin-top:2%;
+  }
+  .controls{
+    width:min(420px, 100%, 46vh);
+    display:flex; align-items:center; gap:10px;
+  }
+  .ctl{
+    font-family:'Inter',sans-serif; font-weight:600; font-size:12.5px;
+    padding:8px 14px; border-radius:6px;
+    border:1px solid var(--border); background:var(--surface); color:var(--ink);
+    cursor:pointer; flex-shrink:0;
+  }
+  .ctl:focus-visible,.replay:focus-visible{outline:2px solid var(--up); outline-offset:2px;}
+  input[type=range]{flex:1 1 auto; min-width:0; accent-color:var(--up);}
+  .foot{
+    max-width:420px; text-align:center;
+    font-size:11px; line-height:1.6; color:var(--faint);
+  }
+</style>
+
+</head>
+<body style="margin:0">
+<div class="wordmark"><b>Floresearch</b> · Market Stories</div>
+
+<div class="stage" id="stage" aria-label="Animated chart: smoking a pack of Marlboro a day versus buying Altria stock, 1986 to 2026">
+  <div class="chartwrap">
+    <div class="made">Made with <b>Floresearch Portal</b></div>
+    <h1 class="story-title">Smoking a pack of Marlboro a day vs buying the stock instead</h1>
+    <div class="story-sub">Altria (MO)</div>
+    <div class="story-range">Sep 1986 – <span id="curdate">Sep 1986</span></div>
+    <canvas id="cv"></canvas>
+    <div class="caption" id="caption">One buys a Marlboro pack a day; the other invests the same in the company behind them.</div>
+    <div class="pillrow">
+      <div class="pill">🚬 Marlboro pack <span class="px" id="price">$1.08</span></div>
+    </div>
+  </div>
+  <div class="endcard">
+    <div class="end-head">One smoked it. One owned it.</div>
+    <div class="end-sub">40 years later</div>
+    <div class="lb">
+      <div class="lb-row"><span class="lb-rank">1</span><span class="lb-dot up"></span><span class="lb-name">Investor: 39,588 shares</span><span class="lb-val">$2.72M</span></div>
+      <div class="lb-row"><span class="lb-rank">2</span><span class="lb-dot down"></span><span class="lb-name">Smoker: 14,607 packs</span><span class="lb-val">$-67.3K</span></div>
+    </div>
+    <button class="replay" id="replay">↺ Replay</button>
+  </div>
+</div>
+
+<div class="controls">
+  <button class="ctl" id="playBtn">Pause</button>
+  <input type="range" id="scrub" min="0" max="1000" value="0" step="1" aria-label="Scrub through the timeline">
+</div>
+
+<p class="foot">Altria (MO) total return with dividends reinvested vs the cumulative cost of a pack a day, Sep 1986 – Aug 2026. Monthly series reconstructed from public price history; figures approximate.</p>
+
+<script>
+(function(){
+  'use strict';
+
+  /* ---------- deterministic data ---------- */
+  function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+  var N=480; // months, Sep 1986 (0) .. Aug 2026 (479)
+
+  // Investor portfolio value anchors [monthIndex, $] in log-space between
+  var A=[[0,36],[9,400],[27,1310],[51,3200],[75,8800],[79,6900],[90,8200],[118,18100],
+         [141,30000],[155,21500],[161,19000],[185,36000],[207,50000],[209,58000],
+         [243,130000],[258,230000],[261,270000],[270,185000],[282,280000],[315,480000],
+         [339,820000],[354,1210000],[369,1550000],[380,1280000],[387,1050000],[396,980000],
+         [402,800000],[409,918000],[423,1150000],[445,1290000],[459,1700000],[471,2300000],[479,2717749]];
+  // Pack price anchors [monthIndex, $], linear between
+  var P=[[0,1.08],[9,1.20],[27,1.36],[60,1.65],[79,1.70],[118,1.90],[146,2.45],[161,2.95],
+         [209,3.58],[269,4.30],[271,5.00],[282,5.57],[354,6.33],[409,7.48],[445,8.99],[479,10.40]];
+
+  function interp(anchors, i, log){
+    var k=0; while(k<anchors.length-2 && anchors[k+1][0]<=i) k++;
+    var a=anchors[k], b=anchors[k+1];
+    var t=(i-a[0])/(b[0]-a[0]); t=Math.max(0,Math.min(1,t));
+    if(log) return Math.exp(Math.log(a[1])+(Math.log(b[1])-Math.log(a[1]))*t);
+    return a[1]+(b[1]-a[1])*t;
+  }
+
+  var rng=mulberry32(7);
+  var inv=[], packPrice=[], smo=[];
+  var n=0, cum=0, PACKS_PER_MONTH=14607/480;
+  for(var i=0;i<N;i++){
+    n=n*0.80+(rng()-0.5)*0.055;
+    inv.push(interp(A,i,true)*Math.exp(n));
+    var pr=interp(P,i,false);
+    packPrice.push(pr);
+    cum-=pr*PACKS_PER_MONTH;
+    smo.push(cum);
+  }
+  // calibrate endpoints to the story's exact totals
+  var fI=2717749/inv[N-1]; for(i=0;i<N;i++) inv[i]*=fI;
+  var fS=-67268/smo[N-1];  for(i=0;i<N;i++) smo[i]*=fS;
+
+  var CAPS=[
+    [0,  "One buys a Marlboro pack a day; the other invests the same in the company behind them.", false],
+    [79, "Marlboro Friday: Philip Morris stock falls 23%.", true],
+    [146,"25-year $206B settlement; shares cover all future packs.", true],
+    [258,"Altria spins off Philip Morris International.", true],
+    [354,"The money not burned on packs crosses $1 million.", true],
+    [387,"Altria buys 35% of JUUL for $12.8B; most is later written off.", true],
+    [470,"40 years: $67,268 spent; $2,717,749 in the portfolio.", false]
+  ];
+
+  /* ---------- helpers ---------- */
+  var MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  function dateOf(i){var m=(8+i)%12, y=1986+Math.floor((8+i)/12); return MON[m]+" "+y;}
+  function yearOf(i){return 1986+Math.floor((8+i)/12);}
+
+  function fmtMoney(v){
+    var s=v<0?"$-":"$", a=Math.abs(v);
+    if(a>=1e6){var m=a/1e6; return s+(m>=10?m.toFixed(1):m.toFixed(2))+"M";}
+    if(a>=1e3){var k=a/1e3; return s+(k>=100?Math.round(k):k>=10?k.toFixed(1):k.toFixed(2))+"K";}
+    return s+Math.round(a);
+  }
+  function fmtAxis(v){
+    if(v===0)return "$0";
+    var s=v<0?"$-":"$", a=Math.abs(v);
+    if(a>=1e6){var m=a/1e6; return s+(m===Math.round(m)?m:+m.toFixed(1))+"M";}
+    if(a>=1e3){var k=a/1e3; return s+(k===Math.round(k)?k:+k.toFixed(1))+"K";}
+    return s+Math.round(a);
+  }
+  function niceStep(raw){
+    var p=Math.pow(10,Math.floor(Math.log10(raw)));
+    var f=raw/p;
+    var nf=f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10;
+    return nf*p;
+  }
+
+  /* ---------- theme tokens for canvas ---------- */
+  var TOK={};
+  function readTokens(){
+    var cs=getComputedStyle(document.documentElement);
+    ["ink","muted","faint","up","down","grid","zero"].forEach(function(k){
+      TOK[k]=cs.getPropertyValue("--"+k).trim();
+    });
+  }
+  readTokens();
+  try{
+    matchMedia("(prefers-color-scheme: dark)").addEventListener("change",readTokens);
+    new MutationObserver(readTokens).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+  }catch(e){}
+
+  /* ---------- playback state ---------- */
+  var DUR=52, HOLD=1.0;            // seconds of chart time, then pause before end card
+  var elapsed=0, playing=true, lastT=null, done=false;
+  var reduced=false;
+  try{reduced=matchMedia("(prefers-reduced-motion: reduce)").matches;}catch(e){}
+  if(reduced){playing=false; elapsed=DUR;}
+
+  var stage=document.getElementById("stage");
+  var cv=document.getElementById("cv");
+  var ctx=cv.getContext("2d");
+  var elDate=document.getElementById("curdate");
+  var elPrice=document.getElementById("price");
+  var elCap=document.getElementById("caption");
+  var playBtn=document.getElementById("playBtn");
+  var scrub=document.getElementById("scrub");
+  var replay=document.getElementById("replay");
+
+  var dispMax=500, dispMin=-500;   // smoothed axis bounds
+  var capIdx=-1, capFadeT=0;
+
+  function setDone(d){
+    if(done===d)return;
+    done=d;
+    stage.classList.toggle("done",d);
+  }
+  function restart(){
+    elapsed=0; dispMax=500; dispMin=-500; setDone(false);
+    playing=true; playBtn.textContent="Pause";
+  }
+  playBtn.addEventListener("click",function(e){e.stopPropagation(); togglePlay();});
+  replay.addEventListener("click",function(e){e.stopPropagation(); restart();});
+  stage.addEventListener("click",function(){ if(!done) togglePlay(); });
+  function togglePlay(){
+    if(elapsed>=DUR+HOLD && !done){elapsed=0;}
+    if(done){restart();return;}
+    playing=!playing; playBtn.textContent=playing?"Pause":"Play";
+  }
+  var scrubbing=false;
+  scrub.addEventListener("input",function(){
+    scrubbing=true;
+    elapsed=(scrub.value/1000)*DUR;
+    setDone(false);
+    playing=false; playBtn.textContent="Play";
+    scrubbing=false;
+  });
+
+  /* ---------- canvas sizing ---------- */
+  var W=0,H=0,DPR=1;
+  function resize(){
+    var r=cv.getBoundingClientRect();
+    DPR=Math.min(window.devicePixelRatio||1,2);
+    W=Math.max(10,r.width); H=Math.max(10,r.height);
+    cv.width=Math.round(W*DPR); cv.height=Math.round(H*DPR);
+  }
+  try{new ResizeObserver(resize).observe(cv);}catch(e){window.addEventListener("resize",resize);}
+  resize();
+
+  /* ---------- render ---------- */
+  function frame(ts){
+    requestAnimationFrame(frame);
+    if(lastT===null)lastT=ts;
+    var dt=Math.min(0.05,(ts-lastT)/1000); lastT=ts;
+    if(playing) elapsed+=dt;
+
+    var p=Math.min(1,elapsed/DUR);
+    if(!scrubbing) scrub.value=Math.round(p*1000);
+    if(elapsed>=DUR+HOLD && playing){ setDone(true); playing=false; playBtn.textContent="Play"; }
+
+    var mF=p*(N-1);                 // fractional month
+    var m=Math.floor(mF), frac=mF-m;
+    var iv=m<N-1?inv[m]+(inv[m+1]-inv[m])*frac:inv[N-1];
+    var sv=m<N-1?smo[m]+(smo[m+1]-smo[m])*frac:smo[N-1];
+
+    /* DOM text */
+    elDate.textContent=dateOf(m);
+    var pr=m<N-1?packPrice[m]+(packPrice[m+1]-packPrice[m])*frac:packPrice[N-1];
+    elPrice.textContent="$"+pr.toFixed(2);
+    var ci=0;
+    for(var c=0;c<CAPS.length;c++) if(CAPS[c][0]<=mF) ci=c;
+    if(ci!==capIdx){
+      capIdx=ci;
+      elCap.style.opacity=0;
+      (function(txt){setTimeout(function(){elCap.textContent=txt; elCap.style.opacity=1;},220);})(CAPS[ci][1]);
+    }
+
+    /* axis targets */
+    var maxV=36, minV=-36;
+    for(var k=0;k<=m;k++){ if(inv[k]>maxV)maxV=inv[k]; if(smo[k]<minV)minV=smo[k]; }
+    if(iv>maxV)maxV=iv; if(sv<minV)minV=sv;
+    var tMax=maxV*1.10, tMin=Math.min(minV*1.28, -tMax*0.04);
+    var ease=1-Math.exp(-dt*5);
+    if(reduced||!playing){dispMax=tMax;dispMin=tMin;}
+    else{dispMax+=(tMax-dispMax)*ease; dispMin+=(tMin-dispMin)*ease;}
+
+    /* geometry */
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    ctx.clearRect(0,0,W,H);
+    var padL=10, padR=Math.max(96,W*0.30), padT=10, padB=24;
+    var axL=padL+44;                       // room for y labels
+    var pw=W-axL-padR, ph=H-padT-padB;
+    function Y(v){return padT+(dispMax-v)/(dispMax-dispMin)*ph;}
+    function X(mi){return axL+(mF<=0?0:mi/mF)*pw;}
+
+    /* gridlines */
+    var step=niceStep((dispMax-dispMin)/4.2);
+    ctx.font="600 10.5px Inter, sans-serif";
+    ctx.textBaseline="middle";
+    var g0=Math.ceil(dispMin/step)*step;
+    for(var gv=g0; gv<=dispMax; gv+=step){
+      var gy=Y(gv);
+      if(gy<padT-1||gy>padT+ph+1)continue;
+      ctx.strokeStyle=Math.abs(gv)<step*0.01?TOK.zero:TOK.grid;
+      ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(axL,gy); ctx.lineTo(axL+pw,gy); ctx.stroke();
+      ctx.fillStyle=TOK.faint;
+      ctx.textAlign="right";
+      ctx.fillText(fmtAxis(Math.abs(gv)<step*0.01?0:gv), axL-7, gy);
+    }
+
+    /* x year ticks */
+    var years=Math.max(1,mF/12);
+    var ystep=[1,2,4,5,10,20].find(function(s){return years/s<=4.5;})||20;
+    ctx.fillStyle=TOK.faint; ctx.textAlign="left"; ctx.textBaseline="top";
+    for(var yy=1986; yy<=yearOf(m); yy+=ystep){
+      var mi=(yy-1986)*12-8; if(mi<0)mi=0;
+      if(mi>mF)continue;
+      ctx.fillText(String(yy), X(mi), padT+ph+8);
+    }
+
+    /* event marker (dotted vertical) */
+    if(CAPS[capIdx][2] && CAPS[capIdx][0]<=mF){
+      var ex=X(CAPS[capIdx][0]);
+      ctx.strokeStyle=TOK.faint; ctx.lineWidth=1; ctx.setLineDash([2,4]);
+      ctx.beginPath(); ctx.moveTo(ex,padT); ctx.lineTo(ex,padT+ph); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    /* series */
+    function drawLine(arr, head, color){
+      ctx.strokeStyle=color; ctx.lineWidth=2.2; ctx.lineJoin="round"; ctx.lineCap="round";
+      ctx.beginPath();
+      ctx.moveTo(X(0),Y(arr[0]));
+      for(var q=1;q<=m;q++) ctx.lineTo(X(q),Y(arr[q]));
+      ctx.lineTo(axL+pw,Y(head));
+      ctx.stroke();
+      ctx.fillStyle=color;
+      ctx.beginPath(); ctx.arc(axL+pw,Y(head),4.2,0,6.2832); ctx.fill();
+    }
+    drawLine(inv,iv,TOK.up);
+    drawLine(smo,sv,TOK.down);
+
+    /* endpoint labels — clamp inside plot, keep the two apart */
+    var lyI=Math.max(padT+16,Math.min(padT+ph-16,Y(iv)));
+    var lyS=Math.max(padT+16,Math.min(padT+ph-16,Y(sv)));
+    if(lyS-lyI<34){var mid=(lyI+lyS)/2; lyI=mid-17; lyS=mid+17;}
+    var lx=axL+pw+10;
+    ctx.textAlign="left"; ctx.textBaseline="middle";
+    ctx.font="700 13px Inter, sans-serif";
+    ctx.fillStyle=TOK.up;   ctx.fillText("Investor 📈", lx, lyI-9);
+    ctx.font="500 12.5px Inter, sans-serif";
+    ctx.fillStyle=TOK.ink;  ctx.fillText(fmtMoney(iv), lx, lyI+9);
+    ctx.font="700 13px Inter, sans-serif";
+    ctx.fillStyle=TOK.down; ctx.fillText("Smoker 🚬", lx, lyS-9);
+    ctx.font="500 12.5px Inter, sans-serif";
+    ctx.fillStyle=TOK.ink;  ctx.fillText(fmtMoney(sv), lx, lyS+9);
+  }
+  requestAnimationFrame(frame);
+
+  if(reduced){ setDone(true); playBtn.textContent="Play"; }
+})();
+</script>
+
+</body>
+</html>
