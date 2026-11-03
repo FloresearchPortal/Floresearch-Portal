@@ -3,41 +3,25 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Pack a Day vs the Stock</title>
+<title>Pack a Day vs PTC Stock</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
 <style>
-  /* Layout: one vertical "story stage" card (9:16, like the source video) centered on the portal's cream ground, controls beneath. */
+  /* Layout: one vertical glass "story stage" (9:16) floating over a white ground with soft
+     Floresearch-green light blobs; glass pill, controls and end card. Single light theme by choice. */
   :root{
-    --bg:#FAFAF8;
-    --surface:#FFFFFF;
+    --bg:#FFFFFF;
     --ink:#17181A;
     --muted:#6E7176;
     --faint:#A0A2A5;
     --up:#1E6B3D;
     --down:#B0201F;
-    --pill-bg:#E6F1E9;
     --pill-ink:#1E6B3D;
-    --border:#E3E1DA;
     --grid:rgba(23,24,26,.10);
     --zero:rgba(23,24,26,.30);
-    --shadow:0 12px 32px rgba(20,20,15,.10);
-    --scrim:rgba(250,250,248,.82);
-  }
-  @media (prefers-color-scheme: dark){
-    :root:not([data-theme="light"]){
-      --bg:#101211; --surface:#17181A; --ink:#F2F3EF; --muted:#9AA09A; --faint:#71786F;
-      --up:#45A66C; --down:#C45348; --pill-bg:#1C2B21; --pill-ink:#7BC89A;
-      --border:#2A2D2B; --grid:rgba(242,243,239,.10); --zero:rgba(242,243,239,.32);
-      --shadow:0 12px 32px rgba(0,0,0,.45); --scrim:rgba(23,24,26,.84);
-      color-scheme: dark;
-    }
-  }
-  :root[data-theme="dark"]{
-    --bg:#101211; --surface:#17181A; --ink:#F2F3EF; --muted:#9AA09A; --faint:#71786F;
-    --up:#45A66C; --down:#C45348; --pill-bg:#1C2B21; --pill-ink:#7BC89A;
-    --border:#2A2D2B; --grid:rgba(242,243,239,.10); --zero:rgba(242,243,239,.32);
-    --shadow:0 12px 32px rgba(0,0,0,.45); --scrim:rgba(23,24,26,.84);
-    color-scheme: dark;
+    --glass:rgba(255,255,255,.42);
+    --glass-strong:rgba(255,255,255,.60);
+    --glass-edge:rgba(255,255,255,.78);
+    --glass-shadow:0 24px 48px rgba(20,40,25,.12), inset 0 1px 0 rgba(255,255,255,.9);
   }
   body{
     background:var(--bg); color:var(--ink);
@@ -48,6 +32,15 @@
     display:flex; flex-direction:column; align-items:center; gap:14px;
     min-height:100%;
   }
+  .bgfx{
+    position:fixed; inset:0; z-index:-1;
+    background:
+      radial-gradient(42% 34% at 18% 10%, rgba(30,107,61,.18), transparent 70%),
+      radial-gradient(52% 42% at 86% 26%, rgba(230,241,233,.95), transparent 72%),
+      radial-gradient(46% 38% at 72% 88%, rgba(30,107,61,.14), transparent 70%),
+      radial-gradient(36% 30% at 8% 78%, rgba(176,32,31,.08), transparent 70%),
+      #FFFFFF;
+  }
   .wordmark{
     font-family:'Poppins',sans-serif; font-weight:600; font-size:13px;
     letter-spacing:.14em; text-transform:uppercase; color:var(--muted);
@@ -57,12 +50,15 @@
     position:relative;
     width:min(420px, 100%, 46vh);
     aspect-ratio:9/16;
-    background:var(--surface);
-    border:1px solid var(--border);
-    border-radius:18px;
-    box-shadow:var(--shadow);
+    background:var(--glass);
+    backdrop-filter:blur(26px) saturate(1.25);
+    -webkit-backdrop-filter:blur(26px) saturate(1.25);
+    border:1px solid var(--glass-edge);
+    border-radius:24px;
+    box-shadow:var(--glass-shadow);
     overflow:hidden;
     cursor:pointer;
+    container-type:inline-size;
   }
   .chartwrap{
     position:absolute; inset:0;
@@ -70,7 +66,7 @@
     padding:4.2% 5% 4.5% 5%;
     transition:opacity .9s ease;
   }
-  .stage.done .chartwrap{opacity:.12;}
+  .stage.done .chartwrap{opacity:.10;}
   .made{
     text-align:center; font-size:11px; color:var(--faint); letter-spacing:.02em;
     padding-top:2%;
@@ -78,10 +74,10 @@
   .made b{color:var(--muted); font-weight:700;}
   .story-title{
     font-family:'Poppins',sans-serif; font-weight:700;
-    font-size:clamp(14px, 4.6cqw, 19px);
-    line-height:1.3; text-align:center; letter-spacing:.04em;
+    font-size:clamp(13px, 4.4cqw, 18px);
+    line-height:1.32; text-align:center; letter-spacing:.04em;
     text-transform:uppercase; text-wrap:balance;
-    margin:5.5% 0 0 0;
+    margin:5% 0 0 0;
   }
   .story-sub{
     font-family:'Poppins',sans-serif; font-weight:600;
@@ -93,10 +89,9 @@
     text-align:center; color:var(--muted); margin-top:2%;
     font-variant-numeric:tabular-nums;
   }
-  .stage{container-type:inline-size;}
   canvas{display:block; width:100%; flex:1 1 auto; min-height:0;}
   .caption{
-    min-height:2.8em;
+    min-height:2.9em;
     font-size:clamp(10.5px, 3.2cqw, 13px); line-height:1.45;
     text-align:center; color:var(--ink);
     display:flex; align-items:flex-start; justify-content:center;
@@ -106,7 +101,11 @@
   .pillrow{display:flex; justify-content:center; padding:2.5% 0 1% 0;}
   .pill{
     display:inline-flex; align-items:center; gap:7px;
-    background:var(--pill-bg); border:1px solid var(--border);
+    background:var(--glass-strong);
+    backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);
+    border:1px solid var(--glass-edge);
+    box-shadow:0 4px 14px rgba(20,40,25,.08), inset 0 1px 0 rgba(255,255,255,.9);
     border-radius:999px; padding:7px 16px;
     font-weight:600; font-size:clamp(11px, 3.4cqw, 14px);
   }
@@ -115,7 +114,9 @@
     position:absolute; inset:0;
     display:flex; flex-direction:column; justify-content:center; align-items:center;
     gap:4.5%; padding:8%;
-    background:var(--scrim);
+    background:rgba(255,255,255,.55);
+    backdrop-filter:blur(18px);
+    -webkit-backdrop-filter:blur(18px);
     opacity:0; pointer-events:none;
     transition:opacity .9s ease;
     text-align:center;
@@ -129,31 +130,42 @@
     font-family:'Poppins',sans-serif; font-weight:600;
     font-size:clamp(14px, 4.6cqw, 20px); color:var(--ink);
   }
-  .lb{display:flex; flex-direction:column; gap:14px; width:100%; max-width:320px;}
+  .lb{display:flex; flex-direction:column; gap:12px; width:100%; max-width:330px;}
   .lb-row{
     display:flex; align-items:center; gap:10px;
-    font-size:clamp(12px, 3.9cqw, 16px); font-weight:500;
+    background:rgba(255,255,255,.55);
+    border:1px solid var(--glass-edge);
+    border-radius:14px; padding:12px 14px;
+    box-shadow:0 6px 18px rgba(20,40,25,.08);
+    font-size:clamp(12px, 3.8cqw, 15px); font-weight:500;
     font-variant-numeric:tabular-nums;
   }
   .lb-rank{color:var(--muted); font-weight:600; width:1em;}
   .lb-dot{width:9px; height:9px; border-radius:50%; flex-shrink:0;}
   .lb-dot.up{background:var(--up);} .lb-dot.down{background:var(--down);}
   .lb-name{flex:1 1 auto; text-align:left; min-width:0;}
-  .lb-val{font-weight:700;}
+  .lb-val{font-weight:700; white-space:nowrap;}
   .replay{
     font-family:'Inter',sans-serif; font-weight:600; font-size:13px;
-    color:var(--pill-ink); background:var(--pill-bg);
-    border:1px solid var(--border); border-radius:8px;
+    color:var(--pill-ink); background:var(--glass-strong);
+    backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+    border:1px solid var(--glass-edge); border-radius:10px;
+    box-shadow:0 4px 14px rgba(20,40,25,.10);
     padding:9px 22px; cursor:pointer; margin-top:2%;
   }
   .controls{
     width:min(420px, 100%, 46vh);
     display:flex; align-items:center; gap:10px;
+    background:var(--glass);
+    backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+    border:1px solid var(--glass-edge);
+    border-radius:14px; padding:8px 12px;
+    box-shadow:0 10px 28px rgba(20,40,25,.08), inset 0 1px 0 rgba(255,255,255,.9);
   }
   .ctl{
     font-family:'Inter',sans-serif; font-weight:600; font-size:12.5px;
-    padding:8px 14px; border-radius:6px;
-    border:1px solid var(--border); background:var(--surface); color:var(--ink);
+    padding:7px 14px; border-radius:8px;
+    border:1px solid var(--glass-edge); background:rgba(255,255,255,.65); color:var(--ink);
     cursor:pointer; flex-shrink:0;
   }
   .ctl:focus-visible,.replay:focus-visible{outline:2px solid var(--up); outline-offset:2px;}
@@ -166,26 +178,28 @@
 
 </head>
 <body style="margin:0">
+<div class="bgfx" aria-hidden="true"></div>
+
 <div class="wordmark"><b>Floresearch</b> · Market Stories</div>
 
-<div class="stage" id="stage" aria-label="Animated chart: smoking a pack of Marlboro a day versus buying Altria stock, 1986 to 2026">
+<div class="stage" id="stage" aria-label="Animated chart: smoking a pack of Benson and Hedges a day versus investing Rs 1,000 in Pakistan Tobacco Company stock, 2000 to 2026">
   <div class="chartwrap">
     <div class="made">Made with <b>Floresearch Portal</b></div>
-    <h1 class="story-title">Smoking a pack of Marlboro a day vs buying the stock instead</h1>
-    <div class="story-sub">Altria (MO)</div>
-    <div class="story-range">Sep 1986 – <span id="curdate">Sep 1986</span></div>
+    <h1 class="story-title">Smoking a pack of Benson &amp; Hedges a day vs buying PTC stock instead</h1>
+    <div class="story-sub">Pakistan Tobacco Company (PSX: PAKT)</div>
+    <div class="story-range">Jan 2000 – <span id="curdate">Jan 2000</span></div>
     <canvas id="cv"></canvas>
-    <div class="caption" id="caption">One buys a Marlboro pack a day; the other invests the same in the company behind them.</div>
+    <div class="caption" id="caption">One smokes a pack of Benson &amp; Hedges a day; the other puts Rs 1,000 into Pakistan Tobacco, the company behind it.</div>
     <div class="pillrow">
-      <div class="pill">🚬 Marlboro pack <span class="px" id="price">$1.08</span></div>
+      <div class="pill">🚬 B&amp;H pack <span class="px" id="price">Rs 25</span></div>
     </div>
   </div>
   <div class="endcard">
     <div class="end-head">One smoked it. One owned it.</div>
-    <div class="end-sub">40 years later</div>
+    <div class="end-sub">26 years later</div>
     <div class="lb">
-      <div class="lb-row"><span class="lb-rank">1</span><span class="lb-dot up"></span><span class="lb-name">Investor: 39,588 shares</span><span class="lb-val">$2.72M</span></div>
-      <div class="lb-row"><span class="lb-rank">2</span><span class="lb-dot down"></span><span class="lb-name">Smoker: 14,607 packs</span><span class="lb-val">$-67.3K</span></div>
+      <div class="lb-row"><span class="lb-rank">1</span><span class="lb-dot up"></span><span class="lb-name">Investor: Rs 1,000 → 128 shares</span><span class="lb-val">Rs 190K</span></div>
+      <div class="lb-row"><span class="lb-rank">2</span><span class="lb-dot down"></span><span class="lb-name">Smoker: 9,790 packs</span><span class="lb-val">Rs -1.67M</span></div>
     </div>
     <button class="replay" id="replay">↺ Replay</button>
   </div>
@@ -196,7 +210,7 @@
   <input type="range" id="scrub" min="0" max="1000" value="0" step="1" aria-label="Scrub through the timeline">
 </div>
 
-<p class="foot">Altria (MO) total return with dividends reinvested vs the cumulative cost of a pack a day, Sep 1986 – Aug 2026. Monthly series reconstructed from public price history; figures approximate.</p>
+<p class="foot">Pakistan Tobacco Company (PSX: PAKT) total return with dividends reinvested on Rs 1,000 invested in Jan 2000, vs the cumulative cost of a Benson &amp; Hedges pack a day, Jan 2000 – Oct 2026. Monthly series reconstructed from public price history; figures approximate.</p>
 
 <script>
 (function(){
@@ -204,17 +218,16 @@
 
   /* ---------- deterministic data ---------- */
   function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
-  var N=480; // months, Sep 1986 (0) .. Aug 2026 (479)
+  var N=322; // months, Jan 2000 (0) .. Oct 2026 (321)
 
-  // Investor portfolio value anchors [monthIndex, $] in log-space between
-  var A=[[0,36],[9,400],[27,1310],[51,3200],[75,8800],[79,6900],[90,8200],[118,18100],
-         [141,30000],[155,21500],[161,19000],[185,36000],[207,50000],[209,58000],
-         [243,130000],[258,230000],[261,270000],[270,185000],[282,280000],[315,480000],
-         [339,820000],[354,1210000],[369,1550000],[380,1280000],[387,1050000],[396,980000],
-         [402,800000],[409,918000],[423,1150000],[445,1290000],[459,1700000],[471,2300000],[479,2717749]];
-  // Pack price anchors [monthIndex, $], linear between
-  var P=[[0,1.08],[9,1.20],[27,1.36],[60,1.65],[79,1.70],[118,1.90],[146,2.45],[161,2.95],
-         [209,3.58],[269,4.30],[271,5.00],[282,5.57],[354,6.33],[409,7.48],[445,8.99],[479,10.40]];
+  // Rs 1,000 invested in PAKT, dividends reinvested — anchors [monthIndex, Rs], log-space between
+  var A=[[0,1000],[6,820],[11,620],[23,500],[29,700],[35,1050],[47,1500],[59,1900],[71,2300],
+         [90,3800],[104,3300],[108,2600],[120,3400],[132,4800],[144,7000],[156,11500],
+         [168,19000],[180,32000],[198,52000],[209,78000],[215,70000],[227,73000],[242,52000],
+         [252,62000],[264,58000],[270,50000],[277,52000],[287,80000],[299,115000],[311,160000],[321,190000]];
+  // Benson & Hedges pack price anchors [monthIndex, Rs], linear between
+  var P=[[0,25],[42,33],[78,45],[114,62],[150,90],[166,120],[190,140],[209,160],[232,220],
+         [256,260],[274,300],[278,475],[295,520],[310,560],[321,590]];
 
   function interp(anchors, i, log){
     var k=0; while(k<anchors.length-2 && anchors[k+1][0]<=i) k++;
@@ -226,7 +239,7 @@
 
   var rng=mulberry32(7);
   var inv=[], packPrice=[], smo=[];
-  var n=0, cum=0, PACKS_PER_MONTH=14607/480;
+  var n=0, cum=0, PACKS_PER_MONTH=9790/N;
   for(var i=0;i<N;i++){
     n=n*0.80+(rng()-0.5)*0.055;
     inv.push(interp(A,i,true)*Math.exp(n));
@@ -236,33 +249,34 @@
     smo.push(cum);
   }
   // calibrate endpoints to the story's exact totals
-  var fI=2717749/inv[N-1]; for(i=0;i<N;i++) inv[i]*=fI;
-  var fS=-67268/smo[N-1];  for(i=0;i<N;i++) smo[i]*=fS;
+  var fI=190000/inv[N-1]; for(i=0;i<N;i++) inv[i]*=fI;
+  var fS=-1670000/smo[N-1]; for(i=0;i<N;i++) smo[i]*=fS;
 
   var CAPS=[
-    [0,  "One buys a Marlboro pack a day; the other invests the same in the company behind them.", false],
-    [79, "Marlboro Friday: Philip Morris stock falls 23%.", true],
-    [146,"25-year $206B settlement; shares cover all future packs.", true],
-    [258,"Altria spins off Philip Morris International.", true],
-    [354,"The money not burned on packs crosses $1 million.", true],
-    [387,"Altria buys 35% of JUUL for $12.8B; most is later written off.", true],
-    [470,"40 years: $67,268 spent; $2,717,749 in the portfolio.", false]
+    [0,  "One smokes a pack of Benson & Hedges a day; the other puts Rs 1,000 into Pakistan Tobacco, the company behind it.", false],
+    [20, "Five loss-making years force a restructuring at PTC; the stock bottoms.", true],
+    [42, "PTC begins making Benson & Hedges locally in Pakistan.", true],
+    [104,"KSE crash: the market floor freezes trading for 110 days.", true],
+    [204,"PSX is Asia's best-performing market; PAKT trades in four figures.", true],
+    [278,"FED on premium packs jumps ~150%; a pack of B&H nears Rs 500.", true],
+    [305,"KSE-100 boom carries PAKT to record highs.", true],
+    [316,"26 years: Rs 1.67M burned on packs; Rs 1,000 grew to Rs 190K.", false]
   ];
 
   /* ---------- helpers ---------- */
   var MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  function dateOf(i){var m=(8+i)%12, y=1986+Math.floor((8+i)/12); return MON[m]+" "+y;}
-  function yearOf(i){return 1986+Math.floor((8+i)/12);}
+  function dateOf(i){return MON[i%12]+" "+(2000+Math.floor(i/12));}
+  function yearOf(i){return 2000+Math.floor(i/12);}
 
   function fmtMoney(v){
-    var s=v<0?"$-":"$", a=Math.abs(v);
+    var s=v<0?"Rs -":"Rs ", a=Math.abs(v);
     if(a>=1e6){var m=a/1e6; return s+(m>=10?m.toFixed(1):m.toFixed(2))+"M";}
     if(a>=1e3){var k=a/1e3; return s+(k>=100?Math.round(k):k>=10?k.toFixed(1):k.toFixed(2))+"K";}
     return s+Math.round(a);
   }
   function fmtAxis(v){
-    if(v===0)return "$0";
-    var s=v<0?"$-":"$", a=Math.abs(v);
+    if(v===0)return "Rs 0";
+    var s=v<0?"-":"", a=Math.abs(v);
     if(a>=1e6){var m=a/1e6; return s+(m===Math.round(m)?m:+m.toFixed(1))+"M";}
     if(a>=1e3){var k=a/1e3; return s+(k===Math.round(k)?k:+k.toFixed(1))+"K";}
     return s+Math.round(a);
@@ -283,13 +297,9 @@
     });
   }
   readTokens();
-  try{
-    matchMedia("(prefers-color-scheme: dark)").addEventListener("change",readTokens);
-    new MutationObserver(readTokens).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
-  }catch(e){}
 
   /* ---------- playback state ---------- */
-  var DUR=52, HOLD=1.0;            // seconds of chart time, then pause before end card
+  var DUR=52, HOLD=1.0;
   var elapsed=0, playing=true, lastT=null, done=false;
   var reduced=false;
   try{reduced=matchMedia("(prefers-reduced-motion: reduce)").matches;}catch(e){}
@@ -305,8 +315,8 @@
   var scrub=document.getElementById("scrub");
   var replay=document.getElementById("replay");
 
-  var dispMax=500, dispMin=-500;   // smoothed axis bounds
-  var capIdx=-1, capFadeT=0;
+  var dispMax=1200, dispMin=-1200;
+  var capIdx=-1;
 
   function setDone(d){
     if(done===d)return;
@@ -314,7 +324,7 @@
     stage.classList.toggle("done",d);
   }
   function restart(){
-    elapsed=0; dispMax=500; dispMin=-500; setDone(false);
+    elapsed=0; dispMax=1200; dispMin=-1200; setDone(false);
     playing=true; playBtn.textContent="Pause";
   }
   playBtn.addEventListener("click",function(e){e.stopPropagation(); togglePlay();});
@@ -356,7 +366,7 @@
     if(!scrubbing) scrub.value=Math.round(p*1000);
     if(elapsed>=DUR+HOLD && playing){ setDone(true); playing=false; playBtn.textContent="Play"; }
 
-    var mF=p*(N-1);                 // fractional month
+    var mF=p*(N-1);
     var m=Math.floor(mF), frac=mF-m;
     var iv=m<N-1?inv[m]+(inv[m+1]-inv[m])*frac:inv[N-1];
     var sv=m<N-1?smo[m]+(smo[m+1]-smo[m])*frac:smo[N-1];
@@ -364,7 +374,7 @@
     /* DOM text */
     elDate.textContent=dateOf(m);
     var pr=m<N-1?packPrice[m]+(packPrice[m+1]-packPrice[m])*frac:packPrice[N-1];
-    elPrice.textContent="$"+pr.toFixed(2);
+    elPrice.textContent="Rs "+Math.round(pr);
     var ci=0;
     for(var c=0;c<CAPS.length;c++) if(CAPS[c][0]<=mF) ci=c;
     if(ci!==capIdx){
@@ -374,10 +384,10 @@
     }
 
     /* axis targets */
-    var maxV=36, minV=-36;
+    var maxV=1000, minV=-1000;
     for(var k=0;k<=m;k++){ if(inv[k]>maxV)maxV=inv[k]; if(smo[k]<minV)minV=smo[k]; }
     if(iv>maxV)maxV=iv; if(sv<minV)minV=sv;
-    var tMax=maxV*1.10, tMin=Math.min(minV*1.28, -tMax*0.04);
+    var tMax=Math.max(maxV*1.12, -minV*0.14), tMin=minV*1.10;
     var ease=1-Math.exp(-dt*5);
     if(reduced||!playing){dispMax=tMax;dispMin=tMin;}
     else{dispMax+=(tMax-dispMax)*ease; dispMin+=(tMin-dispMin)*ease;}
@@ -386,7 +396,7 @@
     ctx.setTransform(DPR,0,0,DPR,0,0);
     ctx.clearRect(0,0,W,H);
     var padL=10, padR=Math.max(96,W*0.30), padT=10, padB=24;
-    var axL=padL+44;                       // room for y labels
+    var axL=padL+48;
     var pw=W-axL-padR, ph=H-padT-padB;
     function Y(v){return padT+(dispMax-v)/(dispMax-dispMin)*ph;}
     function X(mi){return axL+(mF<=0?0:mi/mF)*pw;}
@@ -409,10 +419,10 @@
 
     /* x year ticks */
     var years=Math.max(1,mF/12);
-    var ystep=[1,2,4,5,10,20].find(function(s){return years/s<=4.5;})||20;
+    var ystep=[1,2,3,4,5,6,10,20].find(function(s){return years/s<=4.5;})||20;
     ctx.fillStyle=TOK.faint; ctx.textAlign="left"; ctx.textBaseline="top";
-    for(var yy=1986; yy<=yearOf(m); yy+=ystep){
-      var mi=(yy-1986)*12-8; if(mi<0)mi=0;
+    for(var yy=2000; yy<=yearOf(m); yy+=ystep){
+      var mi=(yy-2000)*12;
       if(mi>mF)continue;
       ctx.fillText(String(yy), X(mi), padT+ph+8);
     }
