@@ -198,6 +198,22 @@
     margin:2.5% 0 0 0; font-size:clamp(10.5px,3.3cqw,13.5px); line-height:1.65;
     color:#3F4440; max-width:94%; position:relative;
   }
+  /* finale entrance animations */
+  @keyframes finUp{from{opacity:0; transform:translateY(22px);}to{opacity:1; transform:none;}}
+  @keyframes finPop{from{opacity:0; transform:scale(.55);}to{opacity:1; transform:scale(1);}}
+  @keyframes finGrow{from{transform:scaleX(0);}to{transform:scaleX(1);}}
+  @keyframes finPulse{
+    0%,100%{box-shadow:0 0 36px rgba(47,184,28,.5); transform:scale(1);}
+    50%{box-shadow:0 0 60px rgba(47,184,28,.9); transform:scale(1.045);}
+  }
+  .stage.finale-on .fin-logo{animation:finUp .8s cubic-bezier(.2,.7,.3,1) .2s both;}
+  .stage.finale-on .fin-cta{animation:finPop .7s cubic-bezier(.34,1.56,.64,1) .65s both, finPulse 2.2s ease-in-out 1.5s infinite;}
+  .stage.finale-on .fin-rule{animation:finGrow .6s ease 1.05s both;}
+  .stage.finale-on .fin-disc-label{animation:finUp .6s ease 1.25s both;}
+  .stage.finale-on .fin-disc{animation:finUp .7s ease 1.4s both;}
+  @media (prefers-reduced-motion: reduce){
+    .finale *{animation:none !important;}
+  }
   .replay{
     font-family:'Inter',sans-serif; font-weight:600; font-size:13px;
     color:var(--pill-ink); background:var(--glass-strong);
@@ -422,6 +438,18 @@
     scrubbing=false;
     updateMusic();
   });
+
+  // deterministic seek hook used for offline video rendering
+  window.__seek=function(t){
+    playing=false;
+    elapsed=Math.min(t,DUR);
+    if(t>=DUR+HOLD){
+      if(!done){done=true; stage.classList.add("done");}
+      stage.classList.toggle("finale-on", t>=DUR+HOLD+6);
+    }else if(done){
+      done=false; stage.classList.remove("done"); stage.classList.remove("finale-on");
+    }
+  };
 
   /* ---------- canvas sizing ---------- */
   var W=0,H=0,DPR=1;
@@ -656,7 +684,7 @@
     if(!ensureAudio())return;
     if(!musTimer)musTimer=setInterval(musicTick,250);
     if(nextT<AC.currentTime)nextT=AC.currentTime+0.1;
-    setLevel(playing&&!done?0.5:0);
+    setLevel(playing||done?0.5:0);
   }
   soundBtn.addEventListener("click",function(e){
     e.stopPropagation();
