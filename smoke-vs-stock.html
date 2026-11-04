@@ -736,7 +736,7 @@
     if(!ensureAudio())return;
     if(!musTimer)musTimer=setInterval(musicTick,250);
     if(nextT<AC.currentTime)nextT=AC.currentTime+0.1;
-    setLevel(playing||done?0.5:0);
+    setLevel(playing||done?4:0);
   }
   soundBtn.addEventListener("click",function(e){
     e.stopPropagation();
