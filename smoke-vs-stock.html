@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Pack a Day vs PTC Stock</title>
+<title>Pack a Day vs PAKT Stock</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
 <style>
   /* Layout: one vertical glass "story stage" (9:16) floating over a white ground with soft
@@ -43,11 +43,11 @@
   }
   .watermark{
     position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
-    width:50%; opacity:.06; pointer-events:none;
+    width:38%; opacity:.07; pointer-events:none;
   }
   .stage{
     position:relative;
-    width:min(420px, 100%, 46vh);
+    width:min(460px, 100%, calc((100vh - 104px) * 0.5625));
     aspect-ratio:9/16;
     background:var(--glass);
     backdrop-filter:blur(26px) saturate(1.25);
@@ -112,7 +112,7 @@
   .endcard{
     position:absolute; inset:0;
     display:flex; flex-direction:column; justify-content:center; align-items:center;
-    gap:4.5%; padding:8%;
+    gap:3.2%; padding:7%;
     background:rgba(255,255,255,.55);
     backdrop-filter:blur(18px);
     -webkit-backdrop-filter:blur(18px);
@@ -144,6 +144,24 @@
   .lb-dot.up{background:var(--up);} .lb-dot.down{background:var(--down);}
   .lb-name{flex:1 1 auto; text-align:left; min-width:0;}
   .lb-val{font-weight:700; white-space:nowrap;}
+  .lb-break{
+    width:100%; max-width:330px;
+    background:rgba(255,255,255,.55); border:1px solid var(--glass-edge);
+    border-radius:14px; padding:10px 14px;
+    box-shadow:0 6px 18px rgba(20,40,25,.08);
+    display:flex; flex-direction:column; gap:6px;
+  }
+  .bk-title{
+    font-size:clamp(9.5px,3cqw,11.5px); font-weight:600; letter-spacing:.06em;
+    text-transform:uppercase; color:var(--muted); text-align:left;
+  }
+  .bk-row{
+    display:flex; justify-content:space-between; gap:10px;
+    font-size:clamp(10.5px,3.3cqw,13px); color:var(--muted);
+    font-variant-numeric:tabular-nums;
+  }
+  .bk-row b{color:var(--up); font-weight:700;}
+  .bk-row.total{border-top:1px solid var(--glass-edge); padding-top:6px; color:var(--ink); font-weight:600;}
   .replay{
     font-family:'Inter',sans-serif; font-weight:600; font-size:13px;
     color:var(--pill-ink); background:var(--glass-strong);
@@ -153,25 +171,21 @@
     padding:9px 22px; cursor:pointer; margin-top:2%;
   }
   .controls{
-    width:min(420px, 100%, 46vh);
-    display:flex; align-items:center; gap:10px;
-    background:var(--glass);
-    backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
-    border:1px solid var(--glass-edge);
-    border-radius:14px; padding:8px 12px;
-    box-shadow:0 10px 28px rgba(20,40,25,.08), inset 0 1px 0 rgba(255,255,255,.9);
+    width:min(460px, 100%);
+    display:flex; align-items:center; justify-content:center; gap:8px;
   }
   .ctl{
-    font-family:'Inter',sans-serif; font-weight:600; font-size:12.5px;
-    padding:7px 14px; border-radius:8px;
-    border:1px solid var(--glass-edge); background:rgba(255,255,255,.65); color:var(--ink);
+    font-family:'Inter',sans-serif; font-weight:600; font-size:11.5px;
+    padding:5px 12px; border-radius:999px;
+    border:1px solid rgba(23,24,26,.14); background:transparent; color:var(--muted);
     cursor:pointer; flex-shrink:0;
   }
   .ctl:focus-visible,.replay:focus-visible{outline:2px solid var(--up); outline-offset:2px;}
-  input[type=range]{flex:1 1 auto; min-width:0; accent-color:var(--up);}
+  input[type=range]{flex:1 1 auto; min-width:0; max-width:160px; accent-color:var(--up);}
   .foot{
-    max-width:420px; text-align:center;
-    font-size:11px; line-height:1.6; color:var(--faint);
+    max-width:460px; text-align:center;
+    font-size:10px; line-height:1.5; color:var(--faint);
+    margin:0;
   }
 </style>
 
@@ -180,9 +194,9 @@
 <div class="bgfx" aria-hidden="true"></div>
 
 <div class="stage" id="stage" aria-label="Animated chart: smoking a pack of Benson and Hedges a day versus investing the pack price in Pakistan Tobacco Company stock, 2000 to 2026">
-  <img class="watermark" src="flostocks-icon.png" alt="">
+  <img class="watermark" src="flostocks-logo.png" alt="">
   <div class="chartwrap">
-    <h1 class="story-title">Smoking a pack of Benson &amp; Hedges a day vs buying PTC stock instead</h1>
+    <h1 class="story-title">Smoking a pack of Benson &amp; Hedges a day vs buying PAKT stock instead</h1>
     <div class="story-sub">Pakistan Tobacco Company (PSX: PAKT)</div>
     <div class="story-range">Jan 2000 – <span id="curdate">Jan 2000</span></div>
     <canvas id="cv"></canvas>
@@ -198,6 +212,13 @@
       <div class="lb-row"><span class="lb-rank">1</span><span class="lb-dot up"></span><span class="lb-name">Investor: 20,805 shares</span><span class="lb-val">Rs 31M</span></div>
       <div class="lb-row"><span class="lb-rank">2</span><span class="lb-dot down"></span><span class="lb-name">Smoker: 9,790 packs</span><span class="lb-val">Rs -1.67M</span></div>
     </div>
+    <div class="lb-break">
+      <div class="bk-title">Where the investor's gains came from</div>
+      <div class="bk-row"><span>Dividends reinvested</span><b>Rs 12.4M</b></div>
+      <div class="bk-row"><span>Capital appreciation</span><b>Rs 10.5M</b></div>
+      <div class="bk-row"><span>Bonus shares</span><b>Rs 6.4M</b></div>
+      <div class="bk-row total"><span>Rs 1.67M invested, earned</span><b>Rs 29.3M</b></div>
+    </div>
     <button class="replay" id="replay">Replay</button>
   </div>
 </div>
@@ -206,7 +227,7 @@
   <button class="ctl" id="playBtn">Pause</button>
   <input type="range" id="scrub" min="0" max="1000" value="0" step="1" aria-label="Scrub through the timeline">
   <button class="ctl" id="soundBtn">Sound: off</button>
-  <button class="ctl" id="reelBtn">Reel</button>
+  <button class="ctl" id="reelBtn">Record</button>
 </div>
 <button class="ctl reel-exit" id="reelExit" hidden>Exit reel</button>
 
