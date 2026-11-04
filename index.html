@@ -974,6 +974,7 @@ async function loadTeam(){
       <td><span class="role-pill ${u.role==='admin'?'admin':'member'}">${escapeHtml(u.role||'member')}</span></td>
       <td>${addedStr}</td>
       <td style="white-space:nowrap;">
+        ${u.pin ? `<button class="btn" data-action="changepin" data-uid="${doc.id}" data-pin="${escapeHtml(u.pin)}" data-name="${escapeHtml(u.name||'')}" style="font-size:11px;padding:5px 10px;margin-right:6px;">Change PIN</button>` : ''}
         ${isSelf ? '<span style="color:var(--footer);font-size:11.5px;">(you)</span>' : `
           <button class="btn danger" data-action="remove" data-uid="${doc.id}" data-name="${escapeHtml(u.name||u.email||u.pin)}" style="font-size:11px;padding:5px 10px;">Remove</button>
         `}
@@ -981,6 +982,54 @@ async function loadTeam(){
     tbody.appendChild(tr);
   });
 
+  tbody.querySelectorAll('[data-action="changepin"]').forEach(btn=>{
+    btn.onclick = async ()=>{
+      const oldPin = btn.dataset.pin;
+      const uid = btn.dataset.uid;
+      const name = btn.dataset.name || 'this member';
+      const isSelf = currentUser && uid === currentUser.uid;
+      const newPin = (prompt('New 6-digit PIN for '+name+':')||'').trim();
+      if(!newPin) return;
+      if(!/^\d{6}$/.test(newPin)){ alert('The PIN must be exactly 6 digits.'); return; }
+      if(newPin === oldPin){ alert('That is already '+name+'’s PIN.'); return; }
+      if(isSelf && !confirm('Changing your own PIN signs you out; sign back in with the new PIN. Continue?')) return;
+      btn.disabled = true;
+      showLoader('Changing PIN…');
+      // A PIN is a synthetic auth account, and the client SDK cannot edit
+      // another user's credentials — so changing a PIN means creating the new
+      // account, copying the profile doc over, and retiring the old account
+      // (we can sign in as it because its credentials derive from the old PIN).
+      const secondaryApp = firebase.initializeApp(firebaseConfig, 'pinchange-'+Date.now());
+      try{
+        const secondaryAuth = secondaryApp.auth();
+        const oldSnap = await db.collection('users').doc(uid).get();
+        const profile = oldSnap.exists ? oldSnap.data() : {};
+        // New account first, so a PIN that's already taken fails before
+        // anything about the member has been touched.
+        const cred = await secondaryAuth.createUserWithEmailAndPassword(pinToEmail(newPin), pinToPassword(newPin));
+        await cred.user.updateProfile({ displayName: profile.name || name });
+        await secondaryApp.firestore().collection('users').doc(cred.user.uid).set(
+          Object.assign({}, profile, { pin: newPin })
+        );
+        await logActivity('Changed PIN for: '+name);
+        // Retire the old identity: profile doc first (while this admin session
+        // still passes the rules' admin check), then the old auth account.
+        await db.collection('users').doc(uid).delete();
+        await secondaryAuth.signOut();
+        const oldCred = await secondaryAuth.signInWithEmailAndPassword(pinToEmail(oldPin), pinToPassword(oldPin));
+        await oldCred.user.delete();
+        alert(name+'’s PIN is now '+newPin+'.');
+        if(isSelf){ await auth.signOut(); return; }
+        loadTeam();
+      }catch(err){
+        alert('Could not change the PIN: '+((err.code||'').includes('email-already-in-use') ? 'that PIN is already assigned to another member.' : err.message));
+      } finally {
+        try{ await secondaryApp.delete(); }catch(_){ }
+        btn.disabled = false;
+        hideLoader();
+      }
+    };
+  });
   tbody.querySelectorAll('[data-action="remove"]').forEach(btn=>{
     btn.onclick = async ()=>{
       const uid = btn.dataset.uid, name = btn.dataset.name;
