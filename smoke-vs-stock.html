@@ -35,10 +35,11 @@
   .bgfx{
     position:fixed; inset:0; z-index:-1;
     background:
-      radial-gradient(42% 34% at 18% 10%, rgba(30,107,61,.18), transparent 70%),
+      radial-gradient(42% 34% at 18% 10%, rgba(30,107,61,.26), transparent 70%),
       radial-gradient(52% 42% at 86% 26%, rgba(230,241,233,.95), transparent 72%),
-      radial-gradient(46% 38% at 72% 88%, rgba(30,107,61,.14), transparent 70%),
-      radial-gradient(36% 30% at 8% 78%, rgba(176,32,31,.08), transparent 70%),
+      radial-gradient(46% 38% at 72% 88%, rgba(30,107,61,.22), transparent 70%),
+      radial-gradient(30% 24% at 45% 55%, rgba(47,184,28,.10), transparent 70%),
+      radial-gradient(36% 30% at 8% 78%, rgba(176,32,31,.10), transparent 70%),
       #FFFFFF;
   }
   .watermark{
@@ -58,6 +59,15 @@
     overflow:hidden;
     cursor:pointer;
     container-type:inline-size;
+  }
+  .stage::before{
+    content:""; position:absolute; inset:0; pointer-events:none;
+    background:
+      radial-gradient(64% 42% at 88% -4%, rgba(30,107,61,.12), transparent 70%),
+      radial-gradient(56% 38% at -6% 104%, rgba(47,184,28,.10), transparent 70%),
+      radial-gradient(42% 30% at 104% 72%, rgba(176,32,31,.055), transparent 70%),
+      repeating-linear-gradient(0deg, rgba(23,24,26,.018) 0 1px, transparent 1px 44px),
+      repeating-linear-gradient(90deg, rgba(23,24,26,.018) 0 1px, transparent 1px 44px);
   }
   .chartwrap{
     position:absolute; inset:0;
@@ -170,9 +180,12 @@
     display:flex; flex-direction:column; justify-content:center; align-items:center;
     padding:10% 8% 14% 8%;
     background:
+      radial-gradient(58% 40% at 12% 6%, rgba(47,184,28,.16), transparent 70%),
+      radial-gradient(62% 44% at 90% 88%, rgba(30,107,61,.14), transparent 72%),
+      radial-gradient(46% 32% at 88% 12%, rgba(230,241,233,.95), transparent 70%),
       repeating-linear-gradient(0deg, rgba(23,24,26,.025) 0 1px, transparent 1px 48px),
       repeating-linear-gradient(90deg, rgba(23,24,26,.025) 0 1px, transparent 1px 48px),
-      #F6F8F5;
+      #F4F8F4;
     opacity:0; transform:scale(1.025); pointer-events:none;
     transition:opacity 1.4s ease, transform 1.4s ease;
     text-align:center;
