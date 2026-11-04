@@ -505,17 +505,15 @@
   }
   requestAnimationFrame(frame);
 
-  /* ---------- background music: synthesized beat loops (WebAudio, no files) ---------- */
-  var AC=null, master=null, styleIdx=0, barIdx=0, nextT=0, musTimer=null, noiseBuf=null;
-  var LABELS=["Sound: off","Beat: pulse","Beat: drive","Beat: chill"];
+  /* ---------- background music: techno loop (WebAudio, no files) ---------- */
+  var AC=null, master=null, musicOn=false, barIdx=0, nextT=0, musTimer=null, noiseBuf=null;
   var soundBtn=document.getElementById("soundBtn");
   var CH=[[146.83,220.00,293.66,349.23],   // Dm
           [116.54,174.61,220.00,293.66],   // Bb maj7
           [174.61,220.00,261.63,329.63],   // F maj7
           [130.81,196.00,246.94,293.66]];  // C add9
   var BASS=[73.42,58.27,87.31,65.41];
-  function beatLen(){ return styleIdx===1?60/118: styleIdx===2?60/140: 60/84; }
-  function barLen(){ return beatLen()*4; }
+  var BEAT=60/128, BAR=BEAT*4;
   function ensureAudio(){
     if(!AC){
       var Ctx=window.AudioContext||window.webkitAudioContext;
@@ -578,43 +576,25 @@
   }
   function hatAt(t,vol){ burst(t,vol,7000,"highpass",0.045); }
   function clapAt(t,vol){ burst(t,vol,1800,"bandpass",0.16); }
+  function openHatAt(t,vol){ burst(t,vol,7500,"highpass",0.10); }
   function scheduleBar(t,bi){
-    var B=beatLen(), b, q;
-    if(styleIdx===1){                              // pulse: four-on-the-floor
-      var c=Math.floor(bi/2)%4;
-      for(b=0;b<4;b++){ kickAt(t+b*B,0.11); hatAt(t+(b+0.5)*B,0.028); }
-      clapAt(t+B,0.05); clapAt(t+3*B,0.05);
-      for(b=0;b<8;b++) bass808(t+b*B/2,BASS[c],B*0.42,0.05);
-      if(bi%2===0){
-        for(q=0;q<CH[c].length;q++){
-          noteAt(t,CH[c][q],0.45,0.028,"sawtooth",1300);
-          noteAt(t+2.5*B,CH[c][q],0.4,0.024,"sawtooth",1300);
-        }
-      }
-    }else if(styleIdx===2){                        // drive: half-time, rolling hats
-      var c2=[0,0,1,3][Math.floor(bi/2)%4];
-      kickAt(t,0.12); kickAt(t+1.5*B,0.10); kickAt(t+2.75*B,0.11);
-      clapAt(t+2*B,0.06);
-      for(var s=0;s<16;s++) hatAt(t+s*B/4,s%4===0?0.02:0.011);
-      if(bi%4===3){ for(var r=0;r<8;r++) hatAt(t+3*B+r*B/8,0.014); }
-      bass808(t,BASS[c2],barLen()*0.9,0.085);
-      if(bi%2===0) for(q=0;q<CH[c2].length;q++) noteAt(t,CH[c2][q],barLen()*2,0.016,"triangle",700);
-    }else{                                         // chill: soft pads
-      var c3=Math.floor(bi/2)%4;
-      if(bi%2===0){
-        for(q=0;q<CH[c3].length;q++) noteAt(t,CH[c3][q],barLen()*2,0.035,"triangle",950);
-        noteAt(t,BASS[c3],barLen()*2,0.06,"sine",950);
-      }
-      kickAt(t,0.09); kickAt(t+2*B,0.09);
-      for(b=0;b<4;b++) hatAt(t+(b+0.5)*B,0.018);
+    var B=BEAT, b, q;
+    var c=[0,0,3,1][Math.floor(bi/2)%4];
+    for(b=0;b<4;b++){
+      kickAt(t+b*B,0.13);
+      openHatAt(t+(b+0.5)*B,0.028);
+      bass808(t+(b+0.5)*B,BASS[c]*2,B*0.38,0.055);
     }
+    for(var s=0;s<16;s++) hatAt(t+s*B/4,0.007);
+    clapAt(t+B,0.04); clapAt(t+3*B,0.04);
+    if(bi%2===0){ for(q=0;q<3;q++) noteAt(t,CH[c][q],0.3,0.02,"sawtooth",900); }
   }
   function musicTick(){
-    if(!AC||styleIdx===0)return;
+    if(!AC||!musicOn)return;
     while(nextT<AC.currentTime+1.2){
       if(nextT<AC.currentTime)nextT=AC.currentTime+0.1;
       scheduleBar(nextT,barIdx++);
-      nextT+=barLen();
+      nextT+=BAR;
     }
   }
   function setLevel(v){
@@ -623,7 +603,7 @@
     master.gain.setTargetAtTime(v,AC.currentTime,0.5);
   }
   function updateMusic(){
-    if(styleIdx===0){ setLevel(0); return; }
+    if(!musicOn){ setLevel(0); return; }
     if(!ensureAudio())return;
     if(!musTimer)musTimer=setInterval(musicTick,250);
     if(nextT<AC.currentTime)nextT=AC.currentTime+0.1;
@@ -631,9 +611,8 @@
   }
   soundBtn.addEventListener("click",function(e){
     e.stopPropagation();
-    styleIdx=(styleIdx+1)%4;
-    soundBtn.textContent=LABELS[styleIdx];
-    barIdx=0;
+    musicOn=!musicOn;
+    soundBtn.textContent=musicOn?"Sound: on":"Sound: off";
     if(AC)nextT=AC.currentTime+0.1;
     updateMusic();
   });
