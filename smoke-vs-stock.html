@@ -161,7 +161,8 @@
     font-variant-numeric:tabular-nums;
   }
   .bk-row b{color:var(--up); font-weight:700;}
-  .bk-row.total{border-top:1px solid var(--glass-edge); padding-top:6px; color:var(--ink); font-weight:600;}
+  .lb-val.up{color:var(--up);}
+  .lb-val.down{color:var(--down);}
   .replay{
     font-family:'Inter',sans-serif; font-weight:600; font-size:13px;
     color:var(--pill-ink); background:var(--glass-strong);
@@ -209,15 +210,14 @@
     <div class="end-head">One smoked it. One owned it.</div>
     <div class="end-sub">26 years later</div>
     <div class="lb">
-      <div class="lb-row"><span class="lb-rank">1</span><span class="lb-dot up"></span><span class="lb-name">Investor: 20,805 shares</span><span class="lb-val">Rs 31M</span></div>
-      <div class="lb-row"><span class="lb-rank">2</span><span class="lb-dot down"></span><span class="lb-name">Smoker: 9,790 packs</span><span class="lb-val">Rs -1.67M</span></div>
+      <div class="lb-row"><span class="lb-rank">1</span><span class="lb-dot up"></span><span class="lb-name">Investor: 20,805 shares</span><span class="lb-val up">Rs 31M</span></div>
+      <div class="lb-row"><span class="lb-rank">2</span><span class="lb-dot down"></span><span class="lb-name">Smoker: 9,790 packs</span><span class="lb-val down">Rs -1.67M</span></div>
     </div>
     <div class="lb-break">
       <div class="bk-title">Where the investor's gains came from</div>
       <div class="bk-row"><span>Dividends reinvested</span><b>Rs 12.4M</b></div>
       <div class="bk-row"><span>Capital appreciation</span><b>Rs 10.5M</b></div>
       <div class="bk-row"><span>Bonus shares</span><b>Rs 6.4M</b></div>
-      <div class="bk-row total"><span>Rs 1.67M invested, earned</span><b>Rs 29.3M</b></div>
     </div>
     <button class="replay" id="replay">Replay</button>
   </div>
@@ -279,8 +279,8 @@
 
   var CAPS=[
     [0,  "One buys a Benson & Hedges pack a day; the other invests the same amount in PAKT, the company behind it.", false],
-    [20, "Five loss-making years force a restructuring at PTC; the stock bottoms.", true],
-    [42, "PTC begins making Benson & Hedges locally in Pakistan.", true],
+    [20, "Five loss-making years force a restructuring at PAKT; the stock bottoms.", true],
+    [42, "PAKT begins making Benson & Hedges locally in Pakistan.", true],
     [104,"KSE crash: the market floor freezes trading for 110 days.", true],
     [168,"PAKT pays out nearly all its profit; dividends and bonus shares compound the stake.", true],
     [204,"PSX is Asia's best-performing market; PAKT trades in four figures.", true],
