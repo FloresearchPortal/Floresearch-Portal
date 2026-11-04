@@ -163,15 +163,41 @@
   .bk-row b{color:var(--up); font-weight:700;}
   .lb-val.up{color:var(--up);}
   .lb-val.down{color:var(--down);}
-  .cta{
-    font-family:'Poppins',sans-serif; font-weight:600;
-    font-size:clamp(11.5px,3.6cqw,14px);
-    color:#FFFFFF; background:var(--up);
-    border-radius:999px; padding:10px 22px;
-    box-shadow:0 8px 20px rgba(30,107,61,.28);
-  }
-  .cta b{font-weight:800; letter-spacing:.04em;}
   body.reel .replay{display:none;}
+  /* Finale: fades in over the end card as the closing CTA screen */
+  .finale{
+    position:absolute; inset:0; z-index:5;
+    display:flex; flex-direction:column; justify-content:center; align-items:center;
+    padding:10% 8%;
+    background:
+      repeating-linear-gradient(0deg, rgba(23,24,26,.025) 0 1px, transparent 1px 48px),
+      repeating-linear-gradient(90deg, rgba(23,24,26,.025) 0 1px, transparent 1px 48px),
+      #F6F8F5;
+    opacity:0; pointer-events:none;
+    transition:opacity 1.1s ease;
+    text-align:center;
+  }
+  .stage.finale-on .finale{opacity:1; pointer-events:auto;}
+  .fin-line{position:absolute; left:0; top:30%; width:100%; height:30%;}
+  .fin-logo{width:74%; position:relative;}
+  .fin-cta{
+    position:relative;
+    font-family:'Poppins',sans-serif; font-weight:800; text-transform:uppercase;
+    letter-spacing:.02em; font-size:clamp(15px,5cqw,21px);
+    color:#06210A; background:#2FB81C;
+    border-radius:999px; padding:4.2% 9%;
+    box-shadow:0 0 36px rgba(47,184,28,.55);
+    margin-top:5%;
+  }
+  .fin-rule{width:78%; height:2px; background:#2FB81C; opacity:.85; margin-top:8%;}
+  .fin-disc-label{
+    font-weight:700; font-size:clamp(9px,2.8cqw,11px);
+    letter-spacing:.3em; text-transform:uppercase; color:#1FA512; margin-top:5%;
+  }
+  .fin-disc{
+    margin:2.5% 0 0 0; font-size:clamp(10.5px,3.3cqw,13.5px); line-height:1.65;
+    color:#3F4440; max-width:94%; position:relative;
+  }
   .replay{
     font-family:'Inter',sans-serif; font-weight:600; font-size:13px;
     color:var(--pill-ink); background:var(--glass-strong);
@@ -228,8 +254,18 @@
       <div class="bk-row"><span>Capital appreciation</span><b>Rs 10.5M</b></div>
       <div class="bk-row"><span>Bonus shares</span><b>Rs 6.4M</b></div>
     </div>
-    <div class="cta">Follow <b>FloStocks</b> for more market stories</div>
     <button class="replay" id="replay">Replay</button>
+  </div>
+  <div class="finale" aria-label="Follow FloStocks">
+    <svg class="fin-line" viewBox="0 0 540 240" preserveAspectRatio="none" aria-hidden="true">
+      <polyline points="0,190 60,150 110,168 170,118 230,145 290,98 340,118 400,72 460,100 540,46"
+        fill="none" stroke="rgba(23,24,26,.09)" stroke-width="2.5"/>
+    </svg>
+    <img class="fin-logo" src="flostocks-logo.png" alt="FloStocks — By Floret Capitals">
+    <div class="fin-cta">Follow FloStocks</div>
+    <div class="fin-rule"></div>
+    <div class="fin-disc-label">Disclaimer</div>
+    <p class="fin-disc">Trading and investing in the PSX involve market risks, price fluctuations, and potential financial losses. Past performance does not guarantee future results. Learn the risks before you trade.</p>
   </div>
 </div>
 
@@ -354,10 +390,13 @@
   var dispMax=1200, dispMin=-1200;
   var capIdx=-1;
 
+  var finT=null;
   function setDone(d){
     if(done===d)return;
     done=d;
     stage.classList.toggle("done",d);
+    if(d){ finT=setTimeout(function(){ stage.classList.add("finale-on"); },6000); }
+    else { clearTimeout(finT); stage.classList.remove("finale-on"); }
     updateMusic();
   }
   function restart(){
