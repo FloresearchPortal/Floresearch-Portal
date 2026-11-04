@@ -42,7 +42,7 @@
       #FFFFFF;
   }
   .watermark{
-    position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+    position:absolute; left:50%; top:43%; transform:translate(-50%,-50%);
     width:38%; opacity:.07; pointer-events:none;
   }
   .stage{
@@ -214,6 +214,9 @@
   @media (prefers-reduced-motion: reduce){
     .finale *{animation:none !important;}
   }
+  /* render mode: transitions are driven frame-by-frame by the seek hook instead of the CSS clock */
+  .stage.render .chartwrap, .stage.render .endcard, .stage.render .finale{transition:none !important;}
+  .stage.render .finale *{animation:none !important; transition:none !important;}
   .replay{
     font-family:'Inter',sans-serif; font-weight:600; font-size:13px;
     color:var(--pill-ink); background:var(--glass-strong);
@@ -439,16 +442,49 @@
     updateMusic();
   });
 
-  // deterministic seek hook used for offline video rendering
+  // deterministic seek hook used for offline video rendering:
+  // all phase transitions are computed from t so they are exact at any frame rate
   window.__seek=function(t){
-    seekMode=true;
-    playing=false;
+    seekMode=true; playing=false;
+    stage.classList.add("render");
     elapsed=Math.min(t,DUR);
-    if(t>=DUR+HOLD){
-      if(!done){done=true; stage.classList.add("done");}
-      stage.classList.toggle("finale-on", t>=DUR+HOLD+6);
-    }else if(done){
-      done=false; stage.classList.remove("done"); stage.classList.remove("finale-on");
+    var endT=DUR+HOLD, finT=endT+6;
+    if(t>=endT){ if(!done){done=true; stage.classList.add("done");} }
+    else if(done){ done=false; stage.classList.remove("done"); }
+    stage.classList.toggle("finale-on", t>=finT);
+
+    function clamp01(x){return Math.max(0,Math.min(1,x));}
+    function io(x){return x<.5?2*x*x:1-Math.pow(-2*x+2,2)/2;}
+    function back(x){var c1=1.70158,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2);}
+
+    var cw=document.querySelector(".chartwrap"), ec=document.querySelector(".endcard"), fin=document.querySelector(".finale");
+    var ee=io(clamp01((t-endT)/1.3));
+    cw.style.opacity = t>=endT ? String(1-0.9*ee) : "";
+    ec.style.opacity = t>=endT ? String(ee) : "";
+    ec.style.transform = t>=endT ? "scale("+(0.97+0.03*ee)+")" : "";
+
+    var fe=io(clamp01((t-finT)/1.4));
+    fin.style.opacity = t>=finT ? String(fe) : "0";
+    fin.style.transform = t>=finT ? "scale("+(1.025-0.025*fe)+")" : "";
+
+    if(t>=finT){
+      var u=t-finT;
+      function st(sel,p){
+        var el=document.querySelector(sel);
+        el.style.opacity=String(p);
+        el.style.transform="translateY("+((1-p)*22)+"px)";
+      }
+      st(".fin-logo", io(clamp01((u-0.2)/0.8)));
+      st(".fin-disc-label", io(clamp01((u-1.25)/0.6)));
+      st(".fin-disc", io(clamp01((u-1.4)/0.7)));
+      document.querySelector(".fin-rule").style.transform="scaleX("+io(clamp01((u-1.05)/0.6))+")";
+      var cta=document.querySelector(".fin-cta");
+      var C=clamp01((u-0.65)/0.7);
+      var s=C<1?(0.55+0.45*back(C)):1, pul=0;
+      if(u>1.5){ pul=0.5-0.5*Math.cos(2*Math.PI*(u-1.5)/2.2); }
+      cta.style.opacity=String(clamp01(C*1.6));
+      cta.style.transform="scale("+(s*(1+0.045*pul))+")";
+      cta.style.boxShadow="0 0 "+(36+26*pul)+"px rgba(47,184,28,"+(0.5+0.4*pul).toFixed(3)+")";
     }
   };
 
