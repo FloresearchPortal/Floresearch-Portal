@@ -552,8 +552,8 @@
     /* geometry */
     ctx.setTransform(DPR,0,0,DPR,0,0);
     ctx.clearRect(0,0,W,H);
-    var padL=10, padR=Math.max(96,W*0.30), padT=10, padB=24;
-    var axL=padL+48;
+    var padL=10, padR=Math.max(98,W*0.25), padT=10, padB=24;
+    var axL=padL+44;
     var pw=W-axL-padR, ph=H-padT-padB;
     function Y(v){return padT+(dispMax-v)/(dispMax-dispMin)*ph;}
     function X(mi){return axL+(mF<=0?0:mi/mF)*pw;}
@@ -618,19 +618,19 @@
     drawLine(smo,sv,TOK.down,0.07);
 
     /* endpoint labels — clamp inside plot, keep the two apart */
-    var lyI=Math.max(padT+16,Math.min(padT+ph-16,Y(iv)));
-    var lyS=Math.max(padT+16,Math.min(padT+ph-16,Y(sv)));
-    if(lyS-lyI<34){var mid=(lyI+lyS)/2; lyI=mid-17; lyS=mid+17;}
-    var lx=axL+pw+10;
+    var lyI=Math.max(padT+20,Math.min(padT+ph-20,Y(iv)));
+    var lyS=Math.max(padT+20,Math.min(padT+ph-20,Y(sv)));
+    if(lyS-lyI<42){var mid=(lyI+lyS)/2; lyI=mid-21; lyS=mid+21;}
+    var lx=axL+pw+11;
     ctx.textAlign="left"; ctx.textBaseline="middle";
-    ctx.font="700 13px Inter, sans-serif";
-    ctx.fillStyle=TOK.up;   ctx.fillText("Investor", lx, lyI-9);
-    ctx.font="500 12.5px Inter, sans-serif";
-    ctx.fillStyle=TOK.ink;  ctx.fillText(fmtMoney(iv), lx, lyI+9);
-    ctx.font="700 13px Inter, sans-serif";
-    ctx.fillStyle=TOK.down; ctx.fillText("Smoker", lx, lyS-9);
-    ctx.font="500 12.5px Inter, sans-serif";
-    ctx.fillStyle=TOK.ink;  ctx.fillText(fmtMoney(sv), lx, lyS+9);
+    ctx.font="700 15.5px Inter, sans-serif";
+    ctx.fillStyle=TOK.up;   ctx.fillText("Investor", lx, lyI-10);
+    ctx.font="600 14px Inter, sans-serif";
+    ctx.fillStyle=TOK.ink;  ctx.fillText(fmtMoney(iv), lx, lyI+10);
+    ctx.font="700 15.5px Inter, sans-serif";
+    ctx.fillStyle=TOK.down; ctx.fillText("Smoker", lx, lyS-10);
+    ctx.font="600 14px Inter, sans-serif";
+    ctx.fillStyle=TOK.ink;  ctx.fillText(fmtMoney(sv), lx, lyS+10);
   }
   requestAnimationFrame(frame);
 
@@ -736,7 +736,7 @@
     if(!ensureAudio())return;
     if(!musTimer)musTimer=setInterval(musicTick,250);
     if(nextT<AC.currentTime)nextT=AC.currentTime+0.1;
-    setLevel(playing||done?4:0);
+    setLevel(playing||done?2.2:0);
   }
   soundBtn.addEventListener("click",function(e){
     e.stopPropagation();
